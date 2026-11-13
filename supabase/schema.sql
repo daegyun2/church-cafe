@@ -10,10 +10,10 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- POS 화면에서 관리자가 카페 이름, 입금 계좌번호, 예금주, 정산용 4자리 PIN 번호 및 카테고리 목록을 실시간 수정 가능
 CREATE TABLE IF NOT EXISTS public.cafe_settings (
   id TEXT PRIMARY KEY DEFAULT 'default',
-  cafe_name TEXT NOT NULL DEFAULT '은혜 선교카페',
+  cafe_name TEXT NOT NULL DEFAULT '첨단겨자씨교회 선교카페',
   bank_name TEXT NOT NULL DEFAULT '카카오뱅크',
   account_number TEXT NOT NULL DEFAULT '3333-01-2345678',
-  account_holder TEXT NOT NULL DEFAULT '은혜교회선교카페',
+  account_holder TEXT NOT NULL DEFAULT '첨단겨자씨교회 선교카페',
   admin_pin TEXT NOT NULL DEFAULT '1234',
   categories JSONB NOT NULL DEFAULT '[
     {"id": "coffee", "name": "커피 (Coffee)", "is_visible": true},
@@ -55,7 +55,7 @@ BEGIN
 END $$;
 
 INSERT INTO public.cafe_settings (id, cafe_name, bank_name, account_number, account_holder, admin_pin)
-VALUES ('default', '은혜 선교카페', '카카오뱅크', '3333-01-2345678', '은혜교회선교카페', '1234')
+VALUES ('default', '첨단겨자씨교회 선교카페', '카카오뱅크', '3333-01-2345678', '첨단겨자씨교회 선교카페', '1234')
 ON CONFLICT (id) DO NOTHING;
 
 -- 3. 메뉴 테이블 (menus)

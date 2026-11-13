@@ -153,6 +153,12 @@ function getLocalSettings(): CafeSettings {
   }
   try {
     const parsed = JSON.parse(raw) as Partial<CafeSettings>;
+    if (parsed.cafe_name === '은혜 선교카페') {
+      parsed.cafe_name = DEFAULT_CAFE_SETTINGS.cafe_name;
+    }
+    if (parsed.account_holder === '은혜교회선교카페') {
+      parsed.account_holder = DEFAULT_CAFE_SETTINGS.account_holder;
+    }
     return {
       ...DEFAULT_CAFE_SETTINGS,
       ...parsed,
@@ -237,14 +243,39 @@ export async function fetchCafeSettings(): Promise<CafeSettings> {
     if (error || !data) {
       return getLocalSettings();
     }
+
+    let resolvedCafeName =
+      (data.cafe_name as string) || DEFAULT_CAFE_SETTINGS.cafe_name;
+    let resolvedAccountHolder =
+      (data.account_holder as string) || DEFAULT_CAFE_SETTINGS.account_holder;
+
+    if (
+      resolvedCafeName === '은혜 선교카페' ||
+      resolvedAccountHolder === '은혜교회선교카페'
+    ) {
+      if (resolvedCafeName === '은혜 선교카페') {
+        resolvedCafeName = DEFAULT_CAFE_SETTINGS.cafe_name;
+      }
+      if (resolvedAccountHolder === '은혜교회선교카페') {
+        resolvedAccountHolder = DEFAULT_CAFE_SETTINGS.account_holder;
+      }
+      await supabase
+        .from('cafe_settings')
+        .update({
+          cafe_name: resolvedCafeName,
+          account_holder: resolvedAccountHolder,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', 'default');
+    }
+
     const rawCats = data.categories as CategoryItem[] | undefined;
     return {
-      cafe_name: (data.cafe_name as string) || DEFAULT_CAFE_SETTINGS.cafe_name,
+      cafe_name: resolvedCafeName,
       bank_name: (data.bank_name as string) || DEFAULT_CAFE_SETTINGS.bank_name,
       account_number:
         (data.account_number as string) || DEFAULT_CAFE_SETTINGS.account_number,
-      account_holder:
-        (data.account_holder as string) || DEFAULT_CAFE_SETTINGS.account_holder,
+      account_holder: resolvedAccountHolder,
       admin_pin: (data.admin_pin as string) || DEFAULT_CAFE_SETTINGS.admin_pin,
       categories:
         Array.isArray(rawCats) && rawCats.length > 0

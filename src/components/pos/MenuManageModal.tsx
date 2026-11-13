@@ -1059,7 +1059,7 @@ export default function MenuManageModal({
                 <input
                   type="text"
                   required
-                  placeholder="예: 은혜 선교카페"
+                  placeholder="예: 첨단겨자씨교회 선교카페"
                   value={cafeName}
                   onChange={(e) => setCafeName(e.target.value)}
                   className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-black text-slate-900 focus:border-slate-900 focus:outline-none"
@@ -1123,7 +1123,7 @@ export default function MenuManageModal({
                     <input
                       type="text"
                       required
-                      placeholder="예: 은혜교회선교카페(홍길동)"
+                      placeholder="예: 첨단겨자씨교회 선교카페(홍길동)"
                       value={accountHolder}
                       onChange={(e) => setAccountHolder(e.target.value)}
                       className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-sm font-bold text-slate-900 focus:border-blue-600 focus:outline-none"

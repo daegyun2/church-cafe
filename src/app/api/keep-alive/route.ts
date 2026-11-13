@@ -43,7 +43,7 @@ export async function GET() {
       ok: true,
       mode: 'supabase',
       status: 'alive',
-      cafeName: data?.cafe_name || '은혜 선교카페',
+      cafeName: data?.cafe_name || '첨단겨자씨교회 선교카페',
       checkedAt,
     });
   } catch (err) {

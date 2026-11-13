@@ -28,6 +28,6 @@ Next.js (App Router) + TypeScript + Tailwind CSS + Supabase (Realtime) 기반의
    NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
    NEXT_PUBLIC_CAFE_BANK_NAME=카카오뱅크
    NEXT_PUBLIC_CAFE_ACCOUNT_NUMBER=3333-01-2345678
-   NEXT_PUBLIC_CAFE_ACCOUNT_HOLDER=은혜교회선교카페
+   NEXT_PUBLIC_CAFE_ACCOUNT_HOLDER=첨단겨자씨교회 선교카페
    NEXT_PUBLIC_ADMIN_PIN=1234
    ```

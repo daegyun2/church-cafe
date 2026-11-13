@@ -1,10 +1,10 @@
 import { CafeSettings, CategoryItem, MenuItem } from '@/types/cafe';
 
 export const CAFE_CONFIG = {
-  cafeName: '은혜 선교카페',
+  cafeName: '첨단겨자씨교회 선교카페',
   bankName: process.env.NEXT_PUBLIC_CAFE_BANK_NAME || '카카오뱅크',
   accountNumber: process.env.NEXT_PUBLIC_CAFE_ACCOUNT_NUMBER || '3333-01-2345678',
-  accountHolder: process.env.NEXT_PUBLIC_CAFE_ACCOUNT_HOLDER || '은혜교회선교카페',
+  accountHolder: process.env.NEXT_PUBLIC_CAFE_ACCOUNT_HOLDER || '첨단겨자씨교회 선교카페',
   adminPin: process.env.NEXT_PUBLIC_ADMIN_PIN || '1234',
 };
 
