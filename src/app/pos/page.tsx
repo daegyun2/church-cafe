@@ -968,11 +968,17 @@ export default function CounterPosPage() {
             ) : (
               <div
                 className={`grid ${
-                  cardScale === 'compact'
-                    ? 'grid-cols-1 gap-3 md:grid-cols-2 2xl:grid-cols-3'
-                    : cardScale === 'large'
-                      ? 'grid-cols-1 gap-5'
-                      : 'grid-cols-1 gap-4 xl:grid-cols-2'
+                  isDirectOrderOpen
+                    ? cardScale === 'compact'
+                      ? 'grid-cols-1 gap-3 md:grid-cols-2 2xl:grid-cols-3'
+                      : cardScale === 'large'
+                        ? 'grid-cols-1 gap-5'
+                        : 'grid-cols-1 gap-4 xl:grid-cols-2'
+                    : cardScale === 'compact'
+                      ? 'grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4'
+                      : cardScale === 'large'
+                        ? 'grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-2'
+                        : 'grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3'
                 }`}
               >
                 {displayedOrders.map((order) => {
