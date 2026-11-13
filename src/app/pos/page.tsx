@@ -43,12 +43,16 @@ import {
   Check,
   CheckCircle2,
   CheckSquare,
+  ChevronLeft,
+  ChevronRight,
   Clock,
   Coffee,
   Edit3,
   ExternalLink,
   Flame,
   Minus,
+  PanelLeftClose,
+  PanelLeftOpen,
   Play,
   Plus,
   RotateCcw,
@@ -76,6 +80,9 @@ export default function CounterPosPage() {
   const [phone, setPhone] = useState('010-');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
   const [submittingOrder, setSubmittingOrder] = useState(false);
+
+  // 좌측 카운터 직접 주문 패드 열림/숨김 상태 (기본: 옆으로 숨김 처리하여 대기열을 넓게 표시)
+  const [isDirectOrderOpen, setIsDirectOrderOpen] = useState<boolean>(false);
 
   // 우측 대기열 필터 탭 ('active' | 'completed' | 'cancelled')
   const [queueTab, setQueueTab] = useState<'active' | 'completed' | 'cancelled'>(
@@ -108,8 +115,27 @@ export default function CounterPosPage() {
       ) {
         setCardScale(savedScale);
       }
+      const savedDirectPad = localStorage.getItem(
+        'church_cafe_pos_direct_order_open'
+      );
+      if (savedDirectPad === 'true') {
+        setIsDirectOrderOpen(true);
+      }
     }
   }, []);
+
+  const toggleDirectOrderPad = (nextState?: boolean) => {
+    setIsDirectOrderOpen((prev) => {
+      const target = typeof nextState === 'boolean' ? nextState : !prev;
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(
+          'church_cafe_pos_direct_order_open',
+          String(target)
+        );
+      }
+      return target;
+    });
+  };
 
   const handleChangeCardScale = (scale: 'compact' | 'normal' | 'large') => {
     setCardScale(scale);
@@ -331,6 +357,31 @@ export default function CounterPosPage() {
         </div>
 
         <div className="flex items-center gap-2">
+          {/* 카운터 주문 패드 토글 버튼 (필요할 때만 켜기) */}
+          <button
+            type="button"
+            onClick={() => toggleDirectOrderPad()}
+            className={`inline-flex items-center gap-1.5 rounded-2xl px-3.5 py-2 text-xs font-extrabold transition ${
+              isDirectOrderOpen
+                ? 'bg-[#3182F6] text-white shadow-xs'
+                : 'bg-[#F2F4F6] text-[#191F28] hover:bg-[#E5E8EB]'
+            }`}
+          >
+            {isDirectOrderOpen ? (
+              <PanelLeftClose className="h-4 w-4" />
+            ) : (
+              <PanelLeftOpen className="h-4 w-4 text-[#3182F6]" />
+            )}
+            <span>
+              {isDirectOrderOpen ? '직접 주문 닫기' : '카운터 직접 주문'}
+            </span>
+            {posCart.length > 0 && !isDirectOrderOpen && (
+              <span className="rounded-full bg-[#3182F6] px-1.5 py-0.2 text-[10px] font-black text-white">
+                {posCart.reduce((s, i) => s + i.quantity, 0)}
+              </span>
+            )}
+          </button>
+
           {/* 원터치 QR 주문 열림 / 일시중지(예배시간·준비중) 토글 버튼 */}
           <button
             type="button"
@@ -396,278 +447,296 @@ export default function CounterPosPage() {
         </div>
       </header>
 
-      {/* 메인 분할 레이아웃 */}
+      {/* 메인 분할 레이아웃: 직접 주문 패드가 닫혀있으면 대기열이 전체 12컬럼을 시원하게 차지 */}
       <div className="grid flex-1 grid-cols-1 overflow-hidden lg:grid-cols-12">
         {/* ==================================================================
-            [좌측 영역 - 5 cols] 카운터 직접 주문 입력 패드
+            [좌측 영역 - 5 cols] 카운터 직접 주문 입력 패드 (접이식/숨김 지원)
         ================================================================== */}
-        <section className="flex flex-col overflow-hidden border-r border-[#E5E8EB] bg-white lg:col-span-5">
-          <div className="border-b border-[#F2F4F6] px-4 pt-3.5 pb-2.5">
-            <div className="mb-2.5 flex items-center justify-between">
-              <h2 className="flex items-center gap-1.5 text-sm font-extrabold text-[#191F28]">
-                <UserPlus className="h-4 w-4 text-[#3182F6]" />
-                카운터 직접 주문 접수
-              </h2>
-              {posCart.length > 0 && (
-                <button
-                  type="button"
-                  onClick={() => setPosCart([])}
-                  className="text-xs font-bold text-[#F04452] hover:underline"
-                >
-                  선택 초기화
-                </button>
-              )}
-            </div>
+        {isDirectOrderOpen && (
+          <section className="flex flex-col overflow-hidden border-r border-[#E5E8EB] bg-white lg:col-span-5 shadow-sm transition-all duration-300">
+            <div className="border-b border-[#F2F4F6] px-4 pt-3.5 pb-2.5">
+              <div className="mb-2.5 flex items-center justify-between">
+                <h2 className="flex items-center gap-1.5 text-sm font-extrabold text-[#191F28]">
+                  <UserPlus className="h-4 w-4 text-[#3182F6]" />
+                  카운터 직접 주문 접수
+                </h2>
+                <div className="flex items-center gap-2">
+                  {posCart.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setPosCart([])}
+                      className="text-xs font-bold text-[#F04452] hover:underline"
+                    >
+                      선택 초기화
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => toggleDirectOrderPad(false)}
+                    className="rounded-xl p-1.5 text-[#8B95A1] hover:bg-[#F2F4F6] hover:text-[#191F28]"
+                    title="패드 숨기기"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
 
-            <div className="flex gap-1.5 overflow-x-auto pb-1">
-              <button
-                type="button"
-                onClick={() => setSelectedCat('all')}
-                className={`shrink-0 rounded-xl px-3.5 py-1.5 text-xs font-extrabold transition ${
-                  selectedCat === 'all'
-                    ? 'bg-[#191F28] text-white'
-                    : 'bg-[#F2F4F6] text-[#4E5968] hover:bg-[#E5E8EB]'
-                }`}
-              >
-                전체 메뉴
-              </button>
-              {visibleCategories.map((cat) => (
+              <div className="flex gap-1.5 overflow-x-auto pb-1">
                 <button
-                  key={cat.id}
                   type="button"
-                  onClick={() => setSelectedCat(cat.id)}
+                  onClick={() => setSelectedCat('all')}
                   className={`shrink-0 rounded-xl px-3.5 py-1.5 text-xs font-extrabold transition ${
-                    selectedCat === cat.id
+                    selectedCat === 'all'
                       ? 'bg-[#191F28] text-white'
                       : 'bg-[#F2F4F6] text-[#4E5968] hover:bg-[#E5E8EB]'
                   }`}
                 >
-                  {cat.name}
+                  전체 메뉴
                 </button>
-              ))}
-            </div>
-          </div>
-
-          {/* 메뉴 그리드 */}
-          <div className="flex-1 overflow-y-auto bg-[#F9FAFB] p-3.5">
-            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3">
-              {visibleMenus.map((menu) => {
-                const isSoldOut = menu.is_sold_out;
-                return (
-                  <div
-                    key={menu.id}
-                    className={`flex flex-col justify-between rounded-2xl border p-3.5 transition ${
-                      isSoldOut
-                        ? 'border-[#E5E8EB] bg-[#F2F4F6] opacity-60'
-                        : 'border-[#E5E8EB]/80 bg-white shadow-[0_2px_10px_rgba(0,0,0,0.03)] hover:border-[#3182F6]'
+                {visibleCategories.map((cat) => (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => setSelectedCat(cat.id)}
+                    className={`shrink-0 rounded-xl px-3.5 py-1.5 text-xs font-extrabold transition ${
+                      selectedCat === cat.id
+                        ? 'bg-[#191F28] text-white'
+                        : 'bg-[#F2F4F6] text-[#4E5968] hover:bg-[#E5E8EB]'
                     }`}
                   >
-                    <div>
-                      <div className="flex items-start justify-between gap-1">
-                        <span
-                          className={`text-sm font-extrabold leading-snug ${
-                            isSoldOut
-                              ? 'line-through text-[#8B95A1]'
-                              : 'text-[#191F28]'
-                          }`}
-                        >
-                          {menu.name}
+                    {cat.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* 메뉴 그리드 */}
+            <div className="flex-1 overflow-y-auto bg-[#F9FAFB] p-3.5">
+              <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3">
+                {visibleMenus.map((menu) => {
+                  const isSoldOut = menu.is_sold_out;
+                  return (
+                    <div
+                      key={menu.id}
+                      className={`flex flex-col justify-between rounded-2xl border p-3.5 transition ${
+                        isSoldOut
+                          ? 'border-[#E5E8EB] bg-[#F2F4F6] opacity-60'
+                          : 'border-[#E5E8EB]/80 bg-white shadow-[0_2px_10px_rgba(0,0,0,0.03)] hover:border-[#3182F6]'
+                      }`}
+                    >
+                      <div>
+                        <div className="flex items-start justify-between gap-1">
+                          <span
+                            className={`text-sm font-extrabold leading-snug ${
+                              isSoldOut
+                                ? 'line-through text-[#8B95A1]'
+                                : 'text-[#191F28]'
+                            }`}
+                          >
+                            {menu.name}
+                          </span>
+                          {menu.is_new && !isSoldOut && (
+                            <span className="shrink-0 rounded-md bg-[#E8F3FF] px-1.5 py-0.5 text-[9px] font-black text-[#3182F6]">
+                              NEW
+                            </span>
+                          )}
+                        </div>
+                        <p className="mt-1 text-xs font-bold text-[#4E5968]">
+                          {formatCurrency(menu.price)}
+                        </p>
+                      </div>
+
+                      <div className="mt-3">
+                        {isSoldOut ? (
+                          <div className="w-full rounded-xl bg-[#FFEEEE] py-1.5 text-center text-xs font-extrabold text-[#F04452]">
+                            품절됨
+                          </div>
+                        ) : menu.has_temp_option ? (
+                          <div className="grid grid-cols-2 gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => addMenuToPosCart(menu, 'ICE')}
+                              className="flex items-center justify-center gap-1 rounded-xl bg-[#E8F3FF] py-2 text-xs font-extrabold text-[#3182F6] transition hover:bg-[#3182F6] hover:text-white active:scale-95"
+                            >
+                              <Snowflake className="h-3 w-3" /> ICE
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => addMenuToPosCart(menu, 'HOT')}
+                              className="flex items-center justify-center gap-1 rounded-xl bg-[#FFEEEE] py-2 text-xs font-extrabold text-[#F04452] transition hover:bg-[#F04452] hover:text-white active:scale-95"
+                            >
+                              <Flame className="h-3 w-3" /> HOT
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              addMenuToPosCart(menu, menu.default_temp)
+                            }
+                            className="w-full rounded-xl bg-[#F2F4F6] py-2 text-xs font-extrabold text-[#191F28] transition hover:bg-[#3182F6] hover:text-white active:scale-95"
+                          >
+                            + 담기 (
+                            {menu.default_temp === 'NONE'
+                              ? '단품'
+                              : menu.default_temp}
+                            )
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* 좌측 하단: 담긴 메뉴 & 이름/전체 휴대폰번호/결제방식 입력 */}
+            <form
+              onSubmit={handleCreatePosOrder}
+              className="border-t border-[#E5E8EB] bg-white p-4"
+            >
+              {posCart.length > 0 ? (
+                <div className="mb-3 max-h-32 space-y-1.5 overflow-y-auto rounded-2xl bg-[#F2F4F6] p-3">
+                  {posCart.map((item) => (
+                    <div
+                      key={item.cartKey}
+                      className="flex items-center justify-between text-xs"
+                    >
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-extrabold text-[#191F28]">
+                          {item.menu.name}
                         </span>
-                        {menu.is_new && !isSoldOut && (
-                          <span className="shrink-0 rounded-md bg-[#E8F3FF] px-1.5 py-0.5 text-[9px] font-black text-[#3182F6]">
-                            NEW
+                        {item.temp_option !== 'NONE' && (
+                          <span
+                            className={`rounded-md px-1.5 py-0.5 text-[10px] font-black ${
+                              item.temp_option === 'HOT'
+                                ? 'bg-[#FFEEEE] text-[#F04452]'
+                                : 'bg-[#E8F3FF] text-[#3182F6]'
+                            }`}
+                          >
+                            {item.temp_option}
                           </span>
                         )}
                       </div>
-                      <p className="mt-1 text-xs font-bold text-[#4E5968]">
-                        {formatCurrency(menu.price)}
-                      </p>
-                    </div>
 
-                    <div className="mt-3">
-                      {isSoldOut ? (
-                        <div className="w-full rounded-xl bg-[#FFEEEE] py-1.5 text-center text-xs font-extrabold text-[#F04452]">
-                          품절됨
-                        </div>
-                      ) : menu.has_temp_option ? (
-                        <div className="grid grid-cols-2 gap-1.5">
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center rounded-lg bg-white shadow-2xs">
                           <button
                             type="button"
-                            onClick={() => addMenuToPosCart(menu, 'ICE')}
-                            className="flex items-center justify-center gap-1 rounded-xl bg-[#E8F3FF] py-2 text-xs font-extrabold text-[#3182F6] transition hover:bg-[#3182F6] hover:text-white active:scale-95"
+                            onClick={() => updatePosCartQty(item.cartKey, -1)}
+                            className="px-1.5 py-1 text-[#4E5968] hover:text-[#191F28]"
                           >
-                            <Snowflake className="h-3 w-3" /> ICE
+                            <Minus className="h-3 w-3" />
                           </button>
+                          <span className="w-5 text-center font-black text-[#191F28]">
+                            {item.quantity}
+                          </span>
                           <button
                             type="button"
-                            onClick={() => addMenuToPosCart(menu, 'HOT')}
-                            className="flex items-center justify-center gap-1 rounded-xl bg-[#FFEEEE] py-2 text-xs font-extrabold text-[#F04452] transition hover:bg-[#F04452] hover:text-white active:scale-95"
+                            onClick={() => updatePosCartQty(item.cartKey, 1)}
+                            className="px-1.5 py-1 text-[#4E5968] hover:text-[#191F28]"
                           >
-                            <Flame className="h-3 w-3" /> HOT
+                            <Plus className="h-3 w-3" />
                           </button>
                         </div>
-                      ) : (
+                        <span className="w-14 text-right font-bold text-[#191F28]">
+                          {formatCurrency(item.menu.price * item.quantity)}
+                        </span>
                         <button
                           type="button"
                           onClick={() =>
-                            addMenuToPosCart(menu, menu.default_temp)
+                            updatePosCartQty(item.cartKey, -item.quantity)
                           }
-                          className="w-full rounded-xl bg-[#F2F4F6] py-2 text-xs font-extrabold text-[#191F28] transition hover:bg-[#3182F6] hover:text-white active:scale-95"
+                          className="text-[#F04452]"
                         >
-                          + 담기 (
-                          {menu.default_temp === 'NONE'
-                            ? '단품'
-                            : menu.default_temp}
-                          )
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* 좌측 하단: 담긴 메뉴 & 이름/전체 휴대폰번호/결제방식 입력 */}
-          <form
-            onSubmit={handleCreatePosOrder}
-            className="border-t border-[#E5E8EB] bg-white p-4"
-          >
-            {posCart.length > 0 ? (
-              <div className="mb-3 max-h-32 space-y-1.5 overflow-y-auto rounded-2xl bg-[#F2F4F6] p-3">
-                {posCart.map((item) => (
-                  <div
-                    key={item.cartKey}
-                    className="flex items-center justify-between text-xs"
-                  >
-                    <div className="flex items-center gap-1.5">
-                      <span className="font-extrabold text-[#191F28]">
-                        {item.menu.name}
-                      </span>
-                      {item.temp_option !== 'NONE' && (
-                        <span
-                          className={`rounded-md px-1.5 py-0.5 text-[10px] font-black ${
-                            item.temp_option === 'HOT'
-                              ? 'bg-[#FFEEEE] text-[#F04452]'
-                              : 'bg-[#E8F3FF] text-[#3182F6]'
-                          }`}
-                        >
-                          {item.temp_option}
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <div className="flex items-center rounded-lg bg-white shadow-2xs">
-                        <button
-                          type="button"
-                          onClick={() => updatePosCartQty(item.cartKey, -1)}
-                          className="px-1.5 py-1 text-[#4E5968] hover:text-[#191F28]"
-                        >
-                          <Minus className="h-3 w-3" />
-                        </button>
-                        <span className="w-5 text-center font-black text-[#191F28]">
-                          {item.quantity}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => updatePosCartQty(item.cartKey, 1)}
-                          className="px-1.5 py-1 text-[#4E5968] hover:text-[#191F28]"
-                        >
-                          <Plus className="h-3 w-3" />
+                          <Trash2 className="h-3.5 w-3.5" />
                         </button>
                       </div>
-                      <span className="w-14 text-right font-bold text-[#191F28]">
-                        {formatCurrency(item.menu.price * item.quantity)}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          updatePosCartQty(item.cartKey, -item.quantity)
-                        }
-                        className="text-[#F04452]"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
                     </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="mb-3 rounded-2xl bg-[#F2F4F6] py-3 text-center text-xs font-semibold text-[#8B95A1]">
-                위 메뉴를 터치하면 여기에 담깁니다
-              </div>
-            )}
+                  ))}
+                </div>
+              ) : (
+                <div className="mb-3 rounded-2xl bg-[#F2F4F6] py-3 text-center text-xs font-semibold text-[#8B95A1]">
+                  위 메뉴를 터치하면 여기에 담깁니다
+                </div>
+              )}
 
-            <div className="grid grid-cols-12 gap-2">
-              <div className="col-span-3">
-                <input
-                  type="text"
-                  required
-                  placeholder="주문자 이름"
-                  value={customerName}
-                  onChange={(e) => setCustomerName(e.target.value)}
-                  className="w-full rounded-xl border border-[#E5E8EB] bg-[#F9FAFB] px-3 py-2.5 text-xs font-bold text-[#191F28] focus:border-[#3182F6] focus:bg-white focus:outline-none"
-                />
+              <div className="grid grid-cols-12 gap-2">
+                <div className="col-span-3">
+                  <input
+                    type="text"
+                    required
+                    placeholder="주문자 이름"
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+                    className="w-full rounded-xl border border-[#E5E8EB] bg-[#F9FAFB] px-3 py-2.5 text-xs font-bold text-[#191F28] focus:border-[#3182F6] focus:bg-white focus:outline-none"
+                  />
+                </div>
+                <div className="col-span-5">
+                  <input
+                    type="tel"
+                    inputMode="numeric"
+                    maxLength={13}
+                    required
+                    placeholder="010-1234-5678"
+                    value={phone}
+                    onChange={(e) =>
+                      setPhone(formatPhoneNumber(e.target.value))
+                    }
+                    className="w-full rounded-xl border border-[#E5E8EB] bg-[#F9FAFB] px-3 py-2.5 text-xs font-black tracking-wide text-[#191F28] focus:border-[#3182F6] focus:bg-white focus:outline-none"
+                  />
+                </div>
+                <div className="col-span-4 grid grid-cols-2 gap-1 rounded-xl bg-[#F2F4F6] p-1">
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod('cash')}
+                    className={`rounded-lg py-1.5 text-xs font-extrabold transition ${
+                      paymentMethod === 'cash'
+                        ? 'bg-white text-[#191F28] shadow-2xs'
+                        : 'text-[#8B95A1]'
+                    }`}
+                  >
+                    현금
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod('transfer')}
+                    className={`rounded-lg py-1.5 text-xs font-extrabold transition ${
+                      paymentMethod === 'transfer'
+                        ? 'bg-[#3182F6] text-white shadow-2xs'
+                        : 'text-[#8B95A1]'
+                    }`}
+                  >
+                    계좌이체
+                  </button>
+                </div>
               </div>
-              <div className="col-span-5">
-                <input
-                  type="tel"
-                  inputMode="numeric"
-                  maxLength={13}
-                  required
-                  placeholder="010-1234-5678"
-                  value={phone}
-                  onChange={(e) => setPhone(formatPhoneNumber(e.target.value))}
-                  className="w-full rounded-xl border border-[#E5E8EB] bg-[#F9FAFB] px-3 py-2.5 text-xs font-black tracking-wide text-[#191F28] focus:border-[#3182F6] focus:bg-white focus:outline-none"
-                />
-              </div>
-              <div className="col-span-4 grid grid-cols-2 gap-1 rounded-xl bg-[#F2F4F6] p-1">
-                <button
-                  type="button"
-                  onClick={() => setPaymentMethod('cash')}
-                  className={`rounded-lg py-1.5 text-xs font-extrabold transition ${
-                    paymentMethod === 'cash'
-                      ? 'bg-white text-[#191F28] shadow-2xs'
-                      : 'text-[#8B95A1]'
-                  }`}
-                >
-                  현금
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setPaymentMethod('transfer')}
-                  className={`rounded-lg py-1.5 text-xs font-extrabold transition ${
-                    paymentMethod === 'transfer'
-                      ? 'bg-[#3182F6] text-white shadow-2xs'
-                      : 'text-[#8B95A1]'
-                  }`}
-                >
-                  계좌이체
-                </button>
-              </div>
-            </div>
 
-            <button
-              type="submit"
-              disabled={submittingOrder || posCart.length === 0}
-              className="mt-2.5 flex w-full items-center justify-between rounded-2xl bg-[#3182F6] px-5 py-3.5 text-sm font-extrabold text-white shadow-sm transition hover:bg-[#1B64DA] disabled:cursor-not-allowed disabled:bg-[#E5E8EB] disabled:text-[#8B95A1]"
-            >
-              <span>
-                카운터 주문 접수 ({posCart.reduce((s, i) => s + i.quantity, 0)}
-                잔/개)
-              </span>
-              <span className="text-base font-black text-white">
-                {formatCurrency(posTotalAmount)}
-              </span>
-            </button>
-          </form>
-        </section>
+              <button
+                type="submit"
+                disabled={submittingOrder || posCart.length === 0}
+                className="mt-2.5 flex w-full items-center justify-between rounded-2xl bg-[#3182F6] px-5 py-3.5 text-sm font-extrabold text-white shadow-sm transition hover:bg-[#1B64DA] disabled:cursor-not-allowed disabled:bg-[#E5E8EB] disabled:text-[#8B95A1]"
+              >
+                <span>
+                  카운터 주문 접수 ({posCart.reduce((s, i) => s + i.quantity, 0)}
+                  잔/개)
+                </span>
+                <span className="text-base font-black text-white">
+                  {formatCurrency(posTotalAmount)}
+                </span>
+              </button>
+            </form>
+          </section>
+        )}
 
         {/* ==================================================================
-            [우측 영역 - 7 cols] 실시간 주문 대기열 & 손님 알림 전송
+            [우측 영역] 실시간 주문 대기열 & 손님 알림 전송 (패드 상태에 따라 7 cols 또는 12 cols 전체 확장)
         ================================================================== */}
-        <section className="flex flex-col overflow-hidden bg-[#F2F4F6] lg:col-span-7">
+        <section
+          className={`flex flex-col overflow-hidden bg-[#F2F4F6] transition-all duration-300 ${
+            isDirectOrderOpen ? 'lg:col-span-7' : 'lg:col-span-12'
+          }`}
+        >
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#E5E8EB] bg-white px-5 py-3">
             <div className="flex flex-wrap items-center gap-2">
               <div className="flex items-center gap-1 rounded-2xl bg-[#F2F4F6] p-1">
