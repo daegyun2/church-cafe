@@ -374,28 +374,11 @@ export default function GuestOrderPage() {
     const statusSteps: {
       key: OrderStatus;
       label: string;
-      desc: string;
     }[] = [
-      {
-        key: 'pending',
-        label: '주문 접수',
-        desc: '카운터로 주문이 전달되었습니다',
-      },
-      {
-        key: 'preparing',
-        label: '수신확인 · 제조중',
-        desc: '봉사자가 음료를 정성껏 만들고 있습니다',
-      },
-      {
-        key: 'ready',
-        label: '제조 완료 (픽업)',
-        desc: '음료가 완성되었습니다! 카운터로 오세요',
-      },
-      {
-        key: 'completed',
-        label: '전달 완료',
-        desc: '픽업 및 결제가 완료되었습니다',
-      },
+      { key: 'pending', label: '주문 접수' },
+      { key: 'preparing', label: '제조 중' },
+      { key: 'ready', label: '제조 완료' },
+      { key: 'completed', label: '수령 완료' },
     ];
 
     const currentStepIdx = statusSteps.findIndex(
@@ -420,15 +403,18 @@ export default function GuestOrderPage() {
     const isMyOrderWaiting =
       completedOrder.status === 'pending' ||
       completedOrder.status === 'preparing';
+    const isOrderFinished =
+      completedOrder.status === 'completed' ||
+      completedOrder.status === 'cancelled';
 
     return (
       <div className="mx-auto flex min-h-screen max-w-md flex-col justify-between bg-white p-5 shadow-lg">
-        <div className="space-y-5 pt-2">
-          {/* 내 주문 목록 전환 바 (여러 개 주문했거나 추가 주문하러 갈 때 언제든 전환 가능) */}
+        <div className="space-y-4 pt-1">
+          {/* 내 주문 목록 전환 바 */}
           <div className="rounded-2xl border border-slate-200 bg-slate-100 p-2.5">
             <div className="mb-1.5 flex items-center justify-between px-1">
               <span className="text-[11px] font-extrabold text-slate-600">
-                📱 내 스마트폰 주문 내역 ({myOrders.length}건)
+                내 주문 ({myOrders.length}건)
               </span>
               <button
                 type="button"
@@ -436,7 +422,7 @@ export default function GuestOrderPage() {
                 className="inline-flex items-center gap-1 rounded-lg bg-amber-500 px-2.5 py-1 text-[11px] font-black text-slate-950 shadow-2xs hover:bg-amber-400"
               >
                 <Plus className="h-3 w-3" />
-                일행·추가 주문하기
+                추가 주문
               </button>
             </div>
 
@@ -445,20 +431,20 @@ export default function GuestOrderPage() {
                 const isSelected = ord.id === completedOrder.id;
                 const statusBadge =
                   ord.status === 'ready'
-                    ? '픽업완료대기 🎉'
+                    ? '픽업 🎉'
                     : ord.status === 'preparing'
                       ? '제조중 🔥'
                       : ord.status === 'pending'
-                        ? '접수됨 ☕'
+                        ? '접수 ☕'
                         : ord.status === 'completed'
-                          ? '수령완료 ✓'
-                          : '취소됨';
+                          ? '완료 ✓'
+                          : '취소';
                 return (
                   <button
                     key={ord.id}
                     type="button"
                     onClick={() => setSelectedOrderId(ord.id)}
-                    className={`flex shrink-0 items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-black transition ${
+                    className={`flex shrink-0 items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-black transition ${
                       isSelected
                         ? ord.status === 'ready'
                           ? 'bg-emerald-600 text-white shadow-xs ring-2 ring-emerald-300'
@@ -489,7 +475,7 @@ export default function GuestOrderPage() {
           {/* 실시간 상태 변경 알림 팝업 배너 */}
           {liveAlertBanner && (
             <div
-              className={`flex items-center justify-between gap-2 rounded-2xl p-4 text-sm font-black shadow-lg transition-all ${
+              className={`flex items-center justify-between gap-2 rounded-2xl p-3.5 text-sm font-black shadow-lg transition-all ${
                 completedOrder.status === 'ready'
                   ? 'animate-bounce bg-emerald-600 text-white'
                   : completedOrder.status === 'preparing'
@@ -512,252 +498,164 @@ export default function GuestOrderPage() {
 
           {/* 상단 주문번호 & 현재 상태 헤더 */}
           <div className="text-center">
-            <span className="inline-block rounded-full bg-amber-100 px-4 py-1 text-xs font-black text-amber-900">
+            <span className="inline-block rounded-full bg-amber-100 px-3.5 py-1 text-xs font-black text-amber-900">
               주문번호 #{completedOrder.order_number}
             </span>
 
-            <h1 className="mt-2 text-2xl font-black text-slate-900">
-              {completedOrder.status === 'pending' && '주문이 접수되었습니다!'}
-              {completedOrder.status === 'preparing' &&
-                '지금 음료를 제조하고 있습니다 ☕'}
-              {completedOrder.status === 'ready' &&
-                '음료가 완성되었습니다! 픽업해 주세요 🎉'}
-              {completedOrder.status === 'completed' &&
-                '전달이 완료되었습니다. 감사합니다!'}
-              {completedOrder.status === 'cancelled' && '주문이 취소되었습니다.'}
+            <h1 className="mt-1.5 text-2xl font-black text-slate-900">
+              {completedOrder.status === 'pending' && '주문이 접수되었습니다'}
+              {completedOrder.status === 'preparing' && '음료를 제조하고 있습니다 ☕'}
+              {completedOrder.status === 'ready' && '음료가 완성되었습니다! 🎉'}
+              {completedOrder.status === 'completed' && '전달 완료되었습니다'}
+              {completedOrder.status === 'cancelled' && '주문이 취소되었습니다'}
             </h1>
-            <p className="mt-1 text-xs font-semibold text-slate-500">
-              이 화면을 켜두시면 수신확인 · 제조중 · 제조완료 상태가 실시간으로 안내됩니다
-            </p>
           </div>
 
-          {/* 실시간 4단계 진행 트래커 */}
+          {/* 심플 4단계 진행 바 */}
           {completedOrder.status !== 'cancelled' && (
-            <div className="rounded-3xl border-2 border-slate-200 bg-slate-50 p-4">
-              <div className="mb-3 flex items-center justify-between">
-                <span className="flex items-center gap-1.5 text-xs font-black text-slate-800">
-                  <BellRing className="h-4 w-4 text-amber-600" />
-                  실시간 음료 진행 상태
-                </span>
-              </div>
-
-              <div className="grid grid-cols-4 gap-1.5">
-                {statusSteps.map((step, idx) => {
-                  const isActive = idx === currentStepIdx;
-                  const isDone = idx < currentStepIdx;
-                  return (
-                    <div
-                      key={step.key}
-                      className={`flex flex-col items-center rounded-2xl p-2.5 text-center transition ${
-                        isActive
-                          ? step.key === 'ready'
-                            ? 'bg-emerald-600 text-white shadow-md ring-2 ring-emerald-300'
-                            : 'bg-slate-900 text-white shadow-md'
-                          : isDone
-                            ? 'bg-emerald-100 text-emerald-900'
-                            : 'bg-white text-slate-400'
-                      }`}
-                    >
-                      <span className="text-[10px] font-extrabold">
-                        STEP {idx + 1}
-                      </span>
-                      <span className="mt-1 text-xs font-black leading-tight">
-                        {step.label}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-              {currentStepIdx >= 0 && (
-                <p className="mt-3 text-center text-xs font-bold text-slate-700">
-                  {statusSteps[currentStepIdx].desc}
-                </p>
-              )}
+            <div className="grid grid-cols-4 gap-1.5 rounded-2xl border border-slate-200 bg-slate-50 p-2">
+              {statusSteps.map((step, idx) => {
+                const isActive = idx === currentStepIdx;
+                const isDone = idx < currentStepIdx;
+                return (
+                  <div
+                    key={step.key}
+                    className={`flex items-center justify-center rounded-xl py-2.5 text-center text-xs font-black transition ${
+                      isActive
+                        ? step.key === 'ready'
+                          ? 'bg-emerald-600 text-white shadow-xs'
+                          : 'bg-slate-900 text-white shadow-xs'
+                        : isDone
+                          ? 'bg-emerald-100 text-emerald-900'
+                          : 'bg-white text-slate-400'
+                    }`}
+                  >
+                    {step.label}
+                  </div>
+                );
+              })}
             </div>
           )}
 
           {/* 내 앞 실시간 대기열 시각화 일러스트 (접수 / 제조중일 때 표시) */}
           {isMyOrderWaiting && (
-            <div className="overflow-hidden rounded-3xl border-2 border-amber-200 bg-gradient-to-br from-amber-50/90 via-white to-orange-50/60 p-4 shadow-xs">
-              <div className="flex items-center justify-between gap-2">
-                <div>
-                  <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2.5 py-0.5 text-[11px] font-black text-amber-900">
-                    ☕ 내 앞 실시간 대기열
-                  </span>
-                  <h3 className="mt-1 text-base font-black text-slate-900">
-                    {teamsAheadCount === 0 ? (
-                      <span className="text-emerald-700">
-                        내 앞 대기 없음 · 지금 내 차례예요! ✨
-                      </span>
-                    ) : (
-                      <>
-                        내 앞에{' '}
-                        <span className="text-amber-600">
-                          {teamsAheadCount}팀
-                        </span>{' '}
-                        <span className="text-xs font-extrabold text-slate-500">
-                          (음료 {cupsAheadCount}잔)
-                        </span>{' '}
-                        있어요
-                      </>
-                    )}
-                  </h3>
-                </div>
-                <div className="rounded-2xl bg-slate-900 px-3 py-1.5 text-right text-white">
-                  <p className="text-[10px] font-bold text-slate-400">내 순번</p>
-                  <p className="text-sm font-black text-amber-400">
-                    {teamsAheadCount === 0
-                      ? '1번째 (제조중)'
-                      : `${teamsAheadCount + 1}번째`}
-                  </p>
-                </div>
+            <div className="rounded-2xl border border-amber-200 bg-amber-50/50 p-3.5">
+              <div className="mb-2.5 flex items-center justify-between">
+                <span className="text-xs font-black text-slate-800">
+                  ☕ 앞 대기{' '}
+                  <strong className="text-amber-600">{teamsAheadCount}팀</strong>{' '}
+                  <span className="text-slate-500">({cupsAheadCount}잔)</span>
+                </span>
+                <span className="rounded-lg bg-slate-900 px-2.5 py-0.5 text-[11px] font-black text-amber-400">
+                  {teamsAheadCount === 0
+                    ? '현재 내 차례'
+                    : `${teamsAheadCount + 1}번째 순서`}
+                </span>
               </div>
 
               {/* 시각적 줄서기(컨베이어) 그림 */}
-              <div className="mt-3.5 rounded-2xl border border-amber-200/80 bg-white p-3">
-                <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
-                  {/* 1. 왼쪽 끝: 카운터 바리스타 제조대 */}
-                  <div className="flex shrink-0 flex-col items-center rounded-2xl bg-slate-900 px-3 py-2 text-white shadow-xs">
-                    <div className="relative flex h-8 w-8 items-center justify-center rounded-xl bg-amber-500 text-slate-950">
-                      <Coffee className="h-4 w-4" />
-                      <span className="absolute -right-1 -top-1 flex h-2.5 w-2.5">
-                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                        <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
-                      </span>
-                    </div>
-                    <span className="mt-1 text-[10px] font-black text-amber-300">
-                      제조 카운터
-                    </span>
-                  </div>
-
-                  {/* 방향 화살표 */}
-                  <span className="shrink-0 text-xs font-black text-amber-500">
-                    ◀
+              <div className="flex items-center gap-1.5 overflow-x-auto rounded-xl border border-amber-200/70 bg-white p-2.5">
+                {/* 1. 왼쪽 끝: 카운터 */}
+                <div className="flex shrink-0 flex-col items-center rounded-xl bg-slate-900 px-2.5 py-2 text-white">
+                  <Coffee className="h-4 w-4 text-amber-400" />
+                  <span className="mt-1 text-[10px] font-black text-amber-300">
+                    카운터
                   </span>
+                </div>
 
-                  {/* 2. 중간: 내 앞 대기 팀들 그래픽 블록 */}
-                  {ordersAhead.length <= 3 ? (
-                    ordersAhead.map((aheadOrder) => {
-                      const cupCnt = aheadOrder.items.reduce(
+                <span className="shrink-0 text-xs font-black text-amber-500">
+                  ◀
+                </span>
+
+                {/* 2. 중간: 내 앞 대기 팀들 */}
+                {ordersAhead.length <= 3 ? (
+                  ordersAhead.map((aheadOrder) => {
+                    const cupCnt = aheadOrder.items.reduce(
+                      (s, i) => s + i.quantity,
+                      0
+                    );
+                    const isPrep = aheadOrder.status === 'preparing';
+                    return (
+                      <React.Fragment key={aheadOrder.id}>
+                        <div
+                          className={`flex shrink-0 flex-col items-center rounded-xl border px-2.5 py-1.5 ${
+                            isPrep
+                              ? 'border-amber-400 bg-amber-50'
+                              : 'border-slate-200 bg-slate-50'
+                          }`}
+                        >
+                          <span className="font-mono text-[11px] font-black text-slate-800">
+                            {isPrep ? '🔥' : '☕'} #{aheadOrder.order_number}
+                          </span>
+                          <span className="text-[10px] font-bold text-slate-500">
+                            {cupCnt}잔
+                          </span>
+                        </div>
+                        <span className="shrink-0 text-[10px] font-black text-slate-300">
+                          ◀
+                        </span>
+                      </React.Fragment>
+                    );
+                  })
+                ) : (
+                  <>
+                    {(() => {
+                      const first = ordersAhead[0];
+                      const firstCups = first.items.reduce(
                         (s, i) => s + i.quantity,
                         0
                       );
-                      const isPrep = aheadOrder.status === 'preparing';
+                      const isPrep = first.status === 'preparing';
                       return (
-                        <React.Fragment key={aheadOrder.id}>
-                          <div
-                            className={`flex shrink-0 flex-col items-center rounded-2xl border-2 px-2.5 py-2 transition ${
-                              isPrep
-                                ? 'border-amber-400 bg-amber-50/80'
-                                : 'border-slate-200 bg-slate-50'
-                            }`}
-                          >
-                            <div className="flex items-center gap-0.5 text-xs">
-                              <span>{isPrep ? '🔥' : '☕'}</span>
-                              <span className="font-mono text-[11px] font-black text-slate-800">
-                                #{aheadOrder.order_number}
-                              </span>
-                            </div>
-                            <span
-                              className={`mt-0.5 rounded-full px-1.5 py-0.2 text-[10px] font-extrabold ${
-                                isPrep
-                                  ? 'bg-amber-500 text-slate-950'
-                                  : 'bg-slate-200 text-slate-600'
-                              }`}
-                            >
-                              {isPrep ? `제조중·${cupCnt}잔` : `대기·${cupCnt}잔`}
-                            </span>
-                          </div>
-                          <span className="shrink-0 text-[10px] font-black text-slate-300">
-                            ◀
+                        <div
+                          className={`flex shrink-0 flex-col items-center rounded-xl border px-2.5 py-1.5 ${
+                            isPrep
+                              ? 'border-amber-400 bg-amber-50'
+                              : 'border-slate-200 bg-slate-50'
+                          }`}
+                        >
+                          <span className="font-mono text-[11px] font-black text-slate-800">
+                            #{first.order_number}
                           </span>
-                        </React.Fragment>
+                          <span className="text-[10px] font-bold text-amber-800">
+                            {firstCups}잔
+                          </span>
+                        </div>
                       );
-                    })
-                  ) : (
-                    <>
-                      {/* 첫 번째 팀 */}
-                      {(() => {
-                        const first = ordersAhead[0];
-                        const firstCups = first.items.reduce(
-                          (s, i) => s + i.quantity,
-                          0
-                        );
-                        const isPrep = first.status === 'preparing';
-                        return (
-                          <div
-                            className={`flex shrink-0 flex-col items-center rounded-2xl border-2 px-2.5 py-2 ${
-                              isPrep
-                                ? 'border-amber-400 bg-amber-50'
-                                : 'border-slate-200 bg-slate-50'
-                            }`}
-                          >
-                            <span className="font-mono text-[11px] font-black text-slate-800">
-                              #{first.order_number}
-                            </span>
-                            <span className="mt-0.5 text-[10px] font-extrabold text-amber-800">
-                              {isPrep ? '제조중' : '대기'}·{firstCups}잔
-                            </span>
-                          </div>
-                        );
-                      })()}
-                      <div className="flex shrink-0 flex-col items-center rounded-xl bg-slate-100 px-2 py-1.5 text-center">
-                        <span className="text-[10px] font-black text-slate-600">
-                          +{ordersAhead.length - 2}팀
-                        </span>
-                        <span className="text-[9px] font-bold text-slate-400">
-                          대기열
-                        </span>
-                      </div>
-                      {/* 내 바로 앞 팀 */}
-                      {(() => {
-                        const prev = ordersAhead[ordersAhead.length - 1];
-                        const prevCups = prev.items.reduce(
-                          (s, i) => s + i.quantity,
-                          0
-                        );
-                        return (
-                          <div className="flex shrink-0 flex-col items-center rounded-2xl border-2 border-slate-200 bg-slate-50 px-2.5 py-2">
-                            <span className="font-mono text-[11px] font-black text-slate-800">
-                              #{prev.order_number}
-                            </span>
-                            <span className="mt-0.5 text-[10px] font-bold text-slate-600">
-                              대기·{prevCups}잔
-                            </span>
-                          </div>
-                        );
-                      })()}
-                      <span className="shrink-0 text-[10px] font-black text-slate-300">
-                        ◀
-                      </span>
-                    </>
-                  )}
-
-                  {/* 3. 오른쪽 끝: 나 (내 주문 위치 강조) */}
-                  <div className="flex shrink-0 flex-col items-center rounded-2xl border-2 border-emerald-500 bg-emerald-50 px-3 py-2 shadow-xs ring-2 ring-emerald-200">
-                    <div className="flex items-center gap-1">
-                      <span className="rounded-md bg-emerald-600 px-1.5 py-0.5 text-[10px] font-black text-white">
-                        나 (MY)
-                      </span>
-                      <span className="font-mono text-xs font-black text-emerald-950">
-                        #{completedOrder.order_number}
-                      </span>
+                    })()}
+                    <div className="shrink-0 rounded-lg bg-slate-100 px-2 py-1 text-[10px] font-black text-slate-600">
+                      +{ordersAhead.length - 2}팀
                     </div>
-                    <span className="mt-1 text-[10px] font-extrabold text-emerald-800">
-                      내 주문 {myCupsCount}잔
+                    {(() => {
+                      const prev = ordersAhead[ordersAhead.length - 1];
+                      const prevCups = prev.items.reduce(
+                        (s, i) => s + i.quantity,
+                        0
+                      );
+                      return (
+                        <div className="flex shrink-0 flex-col items-center rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1.5">
+                          <span className="font-mono text-[11px] font-black text-slate-800">
+                            #{prev.order_number}
+                          </span>
+                          <span className="text-[10px] font-bold text-slate-500">
+                            {prevCups}잔
+                          </span>
+                        </div>
+                      );
+                    })()}
+                    <span className="shrink-0 text-[10px] font-black text-slate-300">
+                      ◀
                     </span>
-                  </div>
-                </div>
+                  </>
+                )}
 
-                {/* 하단: 남은 음료 잔 수 컵 아이콘 게이지 */}
-                <div className="mt-2.5 flex items-center justify-between border-t border-slate-100 pt-2 text-[11px]">
-                  <span className="font-bold text-slate-500">
-                    {teamsAheadCount === 0
-                      ? '곧 음료가 완성됩니다. 잠시만 기다려 주세요!'
-                      : '앞 팀 음료가 완성되면 한 칸씩 앞으로 이동합니다'}
+                {/* 3. 오른쪽 끝: 나 */}
+                <div className="flex shrink-0 flex-col items-center rounded-xl border-2 border-emerald-500 bg-emerald-50 px-3 py-1.5 ring-2 ring-emerald-100">
+                  <span className="font-mono text-xs font-black text-emerald-950">
+                    나 #{completedOrder.order_number}
                   </span>
-                  <span className="font-extrabold text-amber-800">
-                    총 대기 {cupsAheadCount + myCupsCount}잔 중 내 음료 {myCupsCount}잔
+                  <span className="text-[10px] font-extrabold text-emerald-700">
+                    {myCupsCount}잔
                   </span>
                 </div>
               </div>
@@ -868,7 +766,7 @@ export default function GuestOrderPage() {
           </div>
         </div>
 
-        <div className="space-y-2.5 pt-5">
+        <div className="space-y-2 pt-4">
           {/* 기존 주문을 유지한 채 메뉴판으로 가서 추가 주문하기 */}
           <button
             type="button"
@@ -878,29 +776,31 @@ export default function GuestOrderPage() {
             className="flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-900 py-4 text-sm font-black text-white shadow-md transition hover:bg-slate-800"
           >
             <Plus className="h-4 w-4 text-amber-400" />
-            일행 · 추가 주문하러 가기 (현재 주문 알림 유지됨)
+            추가 주문하기 (메뉴판 보기)
           </button>
 
-          {/* 현재 보고 있는 주문만 내 폰 목록에서 닫기 */}
-          <button
-            type="button"
-            onClick={() => {
-              const remaining = myOrders.filter(
-                (o) => o.id !== completedOrder.id
-              );
-              setMyOrders(remaining);
-              saveOrderIdsToStorage(remaining.map((o) => o.id));
-              if (remaining.length > 0) {
-                setSelectedOrderId(remaining[remaining.length - 1].id);
-              } else {
-                setSelectedOrderId(null);
-                setLiveAlertBanner(null);
-              }
-            }}
-            className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-3 text-xs font-bold text-slate-500 hover:bg-slate-100"
-          >
-            이 주문(#{completedOrder.order_number}) 확인창 닫기
-          </button>
+          {/* 음료 수령 완료(completed) 또는 취소(cancelled)된 주문만 목록에서 비울 수 있게 보호 */}
+          {isOrderFinished && (
+            <button
+              type="button"
+              onClick={() => {
+                const remaining = myOrders.filter(
+                  (o) => o.id !== completedOrder.id
+                );
+                setMyOrders(remaining);
+                saveOrderIdsToStorage(remaining.map((o) => o.id));
+                if (remaining.length > 0) {
+                  setSelectedOrderId(remaining[remaining.length - 1].id);
+                } else {
+                  setSelectedOrderId(null);
+                  setLiveAlertBanner(null);
+                }
+              }}
+              className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-3 text-xs font-bold text-slate-500 hover:bg-slate-100"
+            >
+              완료된 주문(#{completedOrder.order_number}) 내역 닫기
+            </button>
+          )}
         </div>
       </div>
     );
@@ -916,9 +816,9 @@ export default function GuestOrderPage() {
         <div className="sticky top-0 z-30 bg-slate-900 px-4 py-2.5 text-white shadow-md">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 overflow-hidden">
-              <span className="flex h-2.5 w-2.5 shrink-0 rounded-full bg-emerald-400 animate-ping" />
+              <span className="flex h-2.5 w-2.5 shrink-0 animate-ping rounded-full bg-emerald-400" />
               <span className="truncate text-xs font-extrabold">
-                내 주문 {myOrders.length}건 진행 중 (
+                내 주문 {myOrders.length}건 (
                 {myOrders.map((o) => `#${o.order_number}`).join(', ')})
               </span>
             </div>
@@ -927,7 +827,7 @@ export default function GuestOrderPage() {
               onClick={() => setIsViewingMenu(false)}
               className="shrink-0 rounded-xl bg-amber-500 px-3 py-1.5 text-xs font-black text-slate-950 shadow-2xs hover:bg-amber-400"
             >
-              내 주문 현황 보기 →
+              주문 현황 보기 →
             </button>
           </div>
         </div>
@@ -940,21 +840,10 @@ export default function GuestOrderPage() {
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-600 text-white">
               <Coffee className="h-5 w-5" />
             </div>
-            <div>
-              <h1 className="text-base font-black text-slate-900">
-                {cafeSettings.cafe_name} 모바일 주문
-              </h1>
-              <p className="text-[11px] font-medium text-slate-500">
-                주문 즉시 제조 현황이 스마트폰으로 실시간 알림됩니다
-              </p>
-            </div>
+            <h1 className="text-base font-black text-slate-900">
+              {cafeSettings.cafe_name}
+            </h1>
           </div>
-          <Link
-            href="/"
-            className="rounded-lg bg-slate-100 px-2.5 py-1.5 text-[11px] font-bold text-slate-600 hover:bg-slate-200"
-          >
-            홈으로
-          </Link>
         </div>
 
         {/* 카테고리 탭 */}
@@ -1011,7 +900,7 @@ export default function GuestOrderPage() {
           const congestion =
             totalWaitingTeams === 0
               ? {
-                  label: '대기 없음 · 바로 제조',
+                  label: '바로 제조',
                   badgeClass: 'bg-emerald-600 text-white',
                   boxClass: 'border-emerald-200 bg-emerald-50/60',
                 }
@@ -1028,14 +917,14 @@ export default function GuestOrderPage() {
                       boxClass: 'border-amber-200 bg-amber-50/60',
                     }
                   : {
-                      label: '주문 많음',
+                      label: '혼잡',
                       badgeClass: 'bg-rose-600 text-white',
                       boxClass: 'border-rose-200 bg-rose-50/60',
                     };
 
           return (
             <div
-              className={`mx-4 mt-3.5 rounded-2xl border p-3.5 shadow-2xs ${congestion.boxClass}`}
+              className={`mx-4 mt-3.5 rounded-2xl border p-3 shadow-2xs ${congestion.boxClass}`}
             >
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
@@ -1045,15 +934,13 @@ export default function GuestOrderPage() {
                     {congestion.label}
                   </span>
                   <span className="text-xs font-black text-slate-900">
-                    {totalWaitingTeams === 0
-                      ? '지금 주문하시면 바로 제조가 시작됩니다!'
-                      : `현재 앞 대기 ${totalWaitingTeams}팀 (총 ${totalWaitingCups}잔)`}
+                    대기 {totalWaitingTeams}팀 ({totalWaitingCups}잔)
                   </span>
                 </div>
               </div>
 
               {/* 시각적 대기열 미니 일러스트 */}
-              <div className="mt-2.5 flex items-center gap-1.5 overflow-x-auto rounded-xl bg-white/90 px-2.5 py-2">
+              <div className="mt-2 flex items-center gap-1.5 overflow-x-auto rounded-xl bg-white/90 px-2.5 py-2">
                 <div className="flex shrink-0 items-center gap-1 rounded-lg bg-slate-900 px-2 py-1 text-[10px] font-black text-amber-400">
                   <Coffee className="h-3 w-3" />
                   카운터
@@ -1097,7 +984,7 @@ export default function GuestOrderPage() {
                 )}
 
                 <div className="flex shrink-0 items-center gap-1 rounded-lg border border-dashed border-emerald-500 bg-emerald-50 px-2 py-1 text-[10px] font-black text-emerald-800">
-                  ✨ 지금 주문 시 내 자리 ({totalWaitingTeams + 1}번째)
+                  내 자리 ({totalWaitingTeams + 1}번째)
                 </div>
               </div>
             </div>
