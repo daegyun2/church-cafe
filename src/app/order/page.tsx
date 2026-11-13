@@ -19,6 +19,7 @@ import {
   fetchCafeSettings,
   fetchMenus,
   fetchOrderById,
+  fetchTodayOrders,
   subscribeCafeRealtime,
 } from '@/lib/store';
 import {
@@ -69,6 +70,7 @@ export default function GuestOrderPage() {
   const [submitting, setSubmitting] = useState(false);
 
   const [completedOrder, setCompletedOrder] = useState<Order | null>(null);
+  const [activeQueueOrders, setActiveQueueOrders] = useState<Order[]>([]);
   const [copied, setCopied] = useState(false);
   const [liveAlertBanner, setLiveAlertBanner] = useState<string | null>(null);
   const [notifPermission, setNotifPermission] = useState<string>('default');
@@ -76,9 +78,10 @@ export default function GuestOrderPage() {
   const prevStatusRef = useRef<OrderStatus | null>(null);
 
   const loadMenus = useCallback(async () => {
-    const [settingsData, data] = await Promise.all([
+    const [settingsData, data, todayOrders] = await Promise.all([
       fetchCafeSettings(),
       fetchMenus(),
+      fetchTodayOrders(),
     ]);
     setCafeSettings(settingsData);
     if (settingsData.allow_transfer === false && settingsData.allow_cash !== false) {
@@ -87,6 +90,10 @@ export default function GuestOrderPage() {
       setPaymentMethod('transfer');
     }
     setMenus(data.filter((m) => m.is_visible));
+    const waitingList = todayOrders
+      .filter((o) => o.status === 'pending' || o.status === 'preparing')
+      .sort((a, b) => a.order_number - b.order_number);
+    setActiveQueueOrders(waitingList);
   }, []);
 
   // 진행 중인 주문 실시간 조회 및 상태 변경 감지 (알람 트리거)
@@ -275,6 +282,7 @@ export default function GuestOrderPage() {
       }
       setCart([]);
       setIsCheckoutOpen(false);
+      await loadMenus();
     } catch (err) {
       console.error(err);
       alert('주문 접수 중 오류가 발생했습니다. 다시 시도해 주세요.');
@@ -335,6 +343,25 @@ export default function GuestOrderPage() {
     const currentStepIdx = statusSteps.findIndex(
       (s) => s.key === completedOrder.status
     );
+
+    const ordersAhead = activeQueueOrders.filter(
+      (o) =>
+        o.order_number < completedOrder.order_number &&
+        o.id !== completedOrder.id &&
+        (o.status === 'pending' || o.status === 'preparing')
+    );
+    const teamsAheadCount = ordersAhead.length;
+    const cupsAheadCount = ordersAhead.reduce(
+      (sum, o) => sum + o.items.reduce((s, i) => s + i.quantity, 0),
+      0
+    );
+    const myCupsCount = completedOrder.items.reduce(
+      (s, i) => s + i.quantity,
+      0
+    );
+    const isMyOrderWaiting =
+      completedOrder.status === 'pending' ||
+      completedOrder.status === 'preparing';
 
     return (
       <div className="mx-auto flex min-h-screen max-w-md flex-col justify-between bg-white p-5 shadow-lg">
@@ -426,6 +453,194 @@ export default function GuestOrderPage() {
                   {statusSteps[currentStepIdx].desc}
                 </p>
               )}
+            </div>
+          )}
+
+          {/* 내 앞 실시간 대기열 시각화 일러스트 (접수 / 제조중일 때 표시) */}
+          {isMyOrderWaiting && (
+            <div className="overflow-hidden rounded-3xl border-2 border-amber-200 bg-gradient-to-br from-amber-50/90 via-white to-orange-50/60 p-4 shadow-xs">
+              <div className="flex items-center justify-between gap-2">
+                <div>
+                  <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2.5 py-0.5 text-[11px] font-black text-amber-900">
+                    ☕ 내 앞 실시간 대기열
+                  </span>
+                  <h3 className="mt-1 text-base font-black text-slate-900">
+                    {teamsAheadCount === 0 ? (
+                      <span className="text-emerald-700">
+                        내 앞 대기 없음 · 지금 내 차례예요! ✨
+                      </span>
+                    ) : (
+                      <>
+                        내 앞에{' '}
+                        <span className="text-amber-600">
+                          {teamsAheadCount}팀
+                        </span>{' '}
+                        <span className="text-xs font-extrabold text-slate-500">
+                          (음료 {cupsAheadCount}잔)
+                        </span>{' '}
+                        있어요
+                      </>
+                    )}
+                  </h3>
+                </div>
+                <div className="rounded-2xl bg-slate-900 px-3 py-1.5 text-right text-white">
+                  <p className="text-[10px] font-bold text-slate-400">내 순번</p>
+                  <p className="text-sm font-black text-amber-400">
+                    {teamsAheadCount === 0
+                      ? '1번째 (제조중)'
+                      : `${teamsAheadCount + 1}번째`}
+                  </p>
+                </div>
+              </div>
+
+              {/* 시각적 줄서기(컨베이어) 그림 */}
+              <div className="mt-3.5 rounded-2xl border border-amber-200/80 bg-white p-3">
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+                  {/* 1. 왼쪽 끝: 카운터 바리스타 제조대 */}
+                  <div className="flex shrink-0 flex-col items-center rounded-2xl bg-slate-900 px-3 py-2 text-white shadow-xs">
+                    <div className="relative flex h-8 w-8 items-center justify-center rounded-xl bg-amber-500 text-slate-950">
+                      <Coffee className="h-4 w-4" />
+                      <span className="absolute -right-1 -top-1 flex h-2.5 w-2.5">
+                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                        <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
+                      </span>
+                    </div>
+                    <span className="mt-1 text-[10px] font-black text-amber-300">
+                      제조 카운터
+                    </span>
+                  </div>
+
+                  {/* 방향 화살표 */}
+                  <span className="shrink-0 text-xs font-black text-amber-500">
+                    ◀
+                  </span>
+
+                  {/* 2. 중간: 내 앞 대기 팀들 그래픽 블록 */}
+                  {ordersAhead.length <= 3 ? (
+                    ordersAhead.map((aheadOrder) => {
+                      const cupCnt = aheadOrder.items.reduce(
+                        (s, i) => s + i.quantity,
+                        0
+                      );
+                      const isPrep = aheadOrder.status === 'preparing';
+                      return (
+                        <React.Fragment key={aheadOrder.id}>
+                          <div
+                            className={`flex shrink-0 flex-col items-center rounded-2xl border-2 px-2.5 py-2 transition ${
+                              isPrep
+                                ? 'border-amber-400 bg-amber-50/80'
+                                : 'border-slate-200 bg-slate-50'
+                            }`}
+                          >
+                            <div className="flex items-center gap-0.5 text-xs">
+                              <span>{isPrep ? '🔥' : '☕'}</span>
+                              <span className="font-mono text-[11px] font-black text-slate-800">
+                                #{aheadOrder.order_number}
+                              </span>
+                            </div>
+                            <span
+                              className={`mt-0.5 rounded-full px-1.5 py-0.2 text-[10px] font-extrabold ${
+                                isPrep
+                                  ? 'bg-amber-500 text-slate-950'
+                                  : 'bg-slate-200 text-slate-600'
+                              }`}
+                            >
+                              {isPrep ? `제조중·${cupCnt}잔` : `대기·${cupCnt}잔`}
+                            </span>
+                          </div>
+                          <span className="shrink-0 text-[10px] font-black text-slate-300">
+                            ◀
+                          </span>
+                        </React.Fragment>
+                      );
+                    })
+                  ) : (
+                    <>
+                      {/* 첫 번째 팀 */}
+                      {(() => {
+                        const first = ordersAhead[0];
+                        const firstCups = first.items.reduce(
+                          (s, i) => s + i.quantity,
+                          0
+                        );
+                        const isPrep = first.status === 'preparing';
+                        return (
+                          <div
+                            className={`flex shrink-0 flex-col items-center rounded-2xl border-2 px-2.5 py-2 ${
+                              isPrep
+                                ? 'border-amber-400 bg-amber-50'
+                                : 'border-slate-200 bg-slate-50'
+                            }`}
+                          >
+                            <span className="font-mono text-[11px] font-black text-slate-800">
+                              #{first.order_number}
+                            </span>
+                            <span className="mt-0.5 text-[10px] font-extrabold text-amber-800">
+                              {isPrep ? '제조중' : '대기'}·{firstCups}잔
+                            </span>
+                          </div>
+                        );
+                      })()}
+                      <div className="flex shrink-0 flex-col items-center rounded-xl bg-slate-100 px-2 py-1.5 text-center">
+                        <span className="text-[10px] font-black text-slate-600">
+                          +{ordersAhead.length - 2}팀
+                        </span>
+                        <span className="text-[9px] font-bold text-slate-400">
+                          대기열
+                        </span>
+                      </div>
+                      {/* 내 바로 앞 팀 */}
+                      {(() => {
+                        const prev = ordersAhead[ordersAhead.length - 1];
+                        const prevCups = prev.items.reduce(
+                          (s, i) => s + i.quantity,
+                          0
+                        );
+                        return (
+                          <div className="flex shrink-0 flex-col items-center rounded-2xl border-2 border-slate-200 bg-slate-50 px-2.5 py-2">
+                            <span className="font-mono text-[11px] font-black text-slate-800">
+                              #{prev.order_number}
+                            </span>
+                            <span className="mt-0.5 text-[10px] font-bold text-slate-600">
+                              대기·{prevCups}잔
+                            </span>
+                          </div>
+                        );
+                      })()}
+                      <span className="shrink-0 text-[10px] font-black text-slate-300">
+                        ◀
+                      </span>
+                    </>
+                  )}
+
+                  {/* 3. 오른쪽 끝: 나 (내 주문 위치 강조) */}
+                  <div className="flex shrink-0 flex-col items-center rounded-2xl border-2 border-emerald-500 bg-emerald-50 px-3 py-2 shadow-xs ring-2 ring-emerald-200">
+                    <div className="flex items-center gap-1">
+                      <span className="rounded-md bg-emerald-600 px-1.5 py-0.5 text-[10px] font-black text-white">
+                        나 (MY)
+                      </span>
+                      <span className="font-mono text-xs font-black text-emerald-950">
+                        #{completedOrder.order_number}
+                      </span>
+                    </div>
+                    <span className="mt-1 text-[10px] font-extrabold text-emerald-800">
+                      내 주문 {myCupsCount}잔
+                    </span>
+                  </div>
+                </div>
+
+                {/* 하단: 남은 음료 잔 수 컵 아이콘 게이지 */}
+                <div className="mt-2.5 flex items-center justify-between border-t border-slate-100 pt-2 text-[11px]">
+                  <span className="font-bold text-slate-500">
+                    {teamsAheadCount === 0
+                      ? '곧 음료가 완성됩니다. 잠시만 기다려 주세요!'
+                      : '앞 팀 음료가 완성되면 한 칸씩 앞으로 이동합니다'}
+                  </span>
+                  <span className="font-extrabold text-amber-800">
+                    총 대기 {cupsAheadCount + myCupsCount}잔 중 내 음료 {myCupsCount}잔
+                  </span>
+                </div>
+              </div>
             </div>
           )}
 
@@ -625,6 +840,110 @@ export default function GuestOrderPage() {
           </p>
         </div>
       )}
+
+      {/* 주문 전 메뉴판 상단: 현재 카페 실시간 대기 현황 그래픽 */}
+      {!isQrOrderPaused &&
+        (() => {
+          const totalWaitingTeams = activeQueueOrders.length;
+          const totalWaitingCups = activeQueueOrders.reduce(
+            (sum, o) => sum + o.items.reduce((s, i) => s + i.quantity, 0),
+            0
+          );
+          const congestion =
+            totalWaitingTeams === 0
+              ? {
+                  label: '대기 없음 · 바로 제조',
+                  badgeClass: 'bg-emerald-600 text-white',
+                  boxClass: 'border-emerald-200 bg-emerald-50/60',
+                }
+              : totalWaitingTeams <= 2
+                ? {
+                    label: '여유',
+                    badgeClass: 'bg-emerald-600 text-white',
+                    boxClass: 'border-emerald-200 bg-emerald-50/50',
+                  }
+                : totalWaitingTeams <= 5
+                  ? {
+                      label: '보통',
+                      badgeClass: 'bg-amber-500 text-slate-950',
+                      boxClass: 'border-amber-200 bg-amber-50/60',
+                    }
+                  : {
+                      label: '주문 많음',
+                      badgeClass: 'bg-rose-600 text-white',
+                      boxClass: 'border-rose-200 bg-rose-50/60',
+                    };
+
+          return (
+            <div
+              className={`mx-4 mt-3.5 rounded-2xl border p-3.5 shadow-2xs ${congestion.boxClass}`}
+            >
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`rounded-full px-2.5 py-0.5 text-[11px] font-black ${congestion.badgeClass}`}
+                  >
+                    {congestion.label}
+                  </span>
+                  <span className="text-xs font-black text-slate-900">
+                    {totalWaitingTeams === 0
+                      ? '지금 주문하시면 바로 제조가 시작됩니다!'
+                      : `현재 앞 대기 ${totalWaitingTeams}팀 (총 ${totalWaitingCups}잔)`}
+                  </span>
+                </div>
+              </div>
+
+              {/* 시각적 대기열 미니 일러스트 */}
+              <div className="mt-2.5 flex items-center gap-1.5 overflow-x-auto rounded-xl bg-white/90 px-2.5 py-2">
+                <div className="flex shrink-0 items-center gap-1 rounded-lg bg-slate-900 px-2 py-1 text-[10px] font-black text-amber-400">
+                  <Coffee className="h-3 w-3" />
+                  카운터
+                </div>
+                <span className="shrink-0 text-[10px] font-black text-amber-500">
+                  ◀
+                </span>
+
+                {activeQueueOrders.slice(0, 3).map((o) => {
+                  const cupCnt = o.items.reduce((s, i) => s + i.quantity, 0);
+                  const isPrep = o.status === 'preparing';
+                  return (
+                    <React.Fragment key={o.id}>
+                      <div
+                        className={`flex shrink-0 items-center gap-1 rounded-lg border px-2 py-1 text-[10px] font-extrabold ${
+                          isPrep
+                            ? 'border-amber-400 bg-amber-50 text-amber-950'
+                            : 'border-slate-200 bg-slate-50 text-slate-700'
+                        }`}
+                      >
+                        <span>{isPrep ? '🔥' : '☕'}</span>
+                        <span>#{o.order_number}</span>
+                        <span className="text-slate-400">({cupCnt}잔)</span>
+                      </div>
+                      <span className="shrink-0 text-[10px] font-bold text-slate-300">
+                        ◀
+                      </span>
+                    </React.Fragment>
+                  );
+                })}
+
+                {activeQueueOrders.length > 3 && (
+                  <>
+                    <span className="shrink-0 rounded-md bg-slate-200 px-1.5 py-0.5 text-[10px] font-black text-slate-600">
+                      +{activeQueueOrders.length - 3}팀
+                    </span>
+                    <span className="shrink-0 text-[10px] font-bold text-slate-300">
+                      ◀
+                    </span>
+                  </>
+                )}
+
+                <div className="flex shrink-0 items-center gap-1 rounded-lg border border-dashed border-emerald-500 bg-emerald-50 px-2 py-1 text-[10px] font-black text-emerald-800">
+                  ✨ 지금 주문 시 내 자리 ({totalWaitingTeams + 1}번째)
+                </div>
+              </div>
+            </div>
+          );
+        })()}
 
       {/* 메뉴 리스트 */}
       <main className="flex-1 space-y-2.5 p-4">
