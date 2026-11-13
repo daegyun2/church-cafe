@@ -866,24 +866,6 @@ export default function AdminSettlementPage() {
             </div>
           </div>
         </div>
-                        >
-                          {order.status === 'completed'
-                            ? '완료'
-                            : order.status === 'cancelled'
-                              ? '취소됨'
-                              : order.status === 'ready'
-                                ? '픽업호출'
-                                : order.status === 'preparing'
-                                  ? '제조중'
-                                  : '접수대기'}
-                        </span>
-                      </div>
-                    </div>
-                  ))
-              )}
-            </div>
-          </div>
-        </div>
 
         <div className="pt-1">
           <Link
