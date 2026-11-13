@@ -337,6 +337,8 @@ export default function GuestOrderPage() {
     (c) => c.is_visible !== false
   );
   const visibleCatIds = new Set(visibleCategories.map((c) => c.id));
+  const pauseBannerRef = useRef<HTMLDivElement | null>(null);
+
   const isQrOrderPaused = cafeSettings.is_qr_order_enabled === false;
 
   const visibleMenus = menus.filter(
@@ -352,7 +354,18 @@ export default function GuestOrderPage() {
   );
 
   const handleMenuClick = (menu: MenuItem) => {
-    if (menu.is_sold_out || isQrOrderPaused) return;
+    if (menu.is_sold_out) return;
+    if (isQrOrderPaused) {
+      if (pauseBannerRef.current) {
+        pauseBannerRef.current.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center',
+        });
+      } else if (typeof window !== 'undefined') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+      return;
+    }
     setOptionModalMenu(menu);
     setSelectedTemp(menu.default_temp);
     setSelectedQty(1);
@@ -1143,7 +1156,10 @@ export default function GuestOrderPage() {
 
       {/* QR 주문 마감(예배시간/준비중) 전체 화면 오버레이 배너 (임팩트 있는 안내) */}
       {isQrOrderPaused && (
-        <div className="mx-4 mt-4 overflow-hidden rounded-[28px] border-2 border-[#F04452] bg-white p-5 text-center shadow-[0_8px_30px_rgba(240,68,82,0.12)]">
+        <div
+          ref={pauseBannerRef}
+          className="mx-4 mt-4 overflow-hidden rounded-[28px] border-2 border-[#F04452] bg-white p-5 text-center shadow-[0_8px_30px_rgba(240,68,82,0.12)] scroll-mt-20 animate-pulse"
+        >
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#FFEEEE] text-[#F04452]">
             <BellRing className="h-7 w-7 animate-bounce" />
           </div>
@@ -1293,12 +1309,14 @@ export default function GuestOrderPage() {
             <button
               key={menu.id}
               type="button"
-              disabled={isSoldOut || isQrOrderPaused}
+              disabled={isSoldOut}
               onClick={() => handleMenuClick(menu)}
               className={`relative flex w-full items-center justify-between rounded-[22px] p-4 text-left transition ${
-                isSoldOut || isQrOrderPaused
+                isSoldOut
                   ? 'cursor-not-allowed bg-white/60 opacity-60'
-                  : 'bg-white shadow-[0_2px_12px_rgba(0,0,0,0.03)] active:scale-[0.99] hover:ring-2 hover:ring-[#3182F6]/30'
+                  : isQrOrderPaused
+                    ? 'bg-white shadow-[0_2px_12px_rgba(0,0,0,0.03)] opacity-75 active:scale-[0.98]'
+                    : 'bg-white shadow-[0_2px_12px_rgba(0,0,0,0.03)] active:scale-[0.99] hover:ring-2 hover:ring-[#3182F6]/30'
               }`}
             >
               <div className="min-w-0 flex-1 pr-3">
