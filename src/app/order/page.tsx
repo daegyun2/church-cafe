@@ -37,6 +37,8 @@ import {
   BellRing,
   Check,
   CheckCircle2,
+  ChevronDown,
+  ChevronUp,
   Coffee,
   Copy,
   Flame,
@@ -111,6 +113,9 @@ export default function GuestOrderPage() {
   const [isHistoryOpen, setIsHistoryOpen] = useState<boolean>(false);
   const [selectedReceiptOrder, setSelectedReceiptOrder] =
     useState<Order | null>(null);
+  // 대기 화면 상단 [내 주문 (~건) ▾] 접이식 목록 열림 상태 (기본 숨김)
+  const [isOrderListExpanded, setIsOrderListExpanded] =
+    useState<boolean>(false);
 
   const [activeQueueOrders, setActiveQueueOrders] = useState<Order[]>([]);
   const [copied, setCopied] = useState(false);
@@ -520,112 +525,149 @@ export default function GuestOrderPage() {
     return (
       <div className="mx-auto flex min-h-screen max-w-md flex-col justify-between bg-[#F2F4F6] p-4 sm:p-5 text-[#191F28]">
         <div className="space-y-3.5 pt-1">
-          {/* 내 주문 상태 리스트 (여러 건 주문했거나 일부가 완료/복구되었을 때도 모든 주문 상태를 한눈에 리스트로 확인) */}
-          <div className="rounded-[26px] bg-white p-4 shadow-[0_4px_20px_rgba(0,0,0,0.04)]">
-            <div className="mb-3 flex items-center justify-between px-0.5">
-              <div className="flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full bg-[#3182F6]" />
-                <span className="text-xs font-extrabold text-[#191F28]">
-                  내 주문 상태 목록 ({myOrders.length}건)
-                </span>
-              </div>
+          {/* 상단 미니 컨트롤 바: 평소에는 목록을 숨겨두고 우측 '내 주문 (N건) ▾' 버튼을 눌렀을 때만 펼쳐짐 */}
+          <div className="relative">
+            <div className="flex items-center justify-between px-0.5">
               <button
                 type="button"
                 onClick={() => setIsViewingMenu(true)}
-                className="inline-flex items-center gap-1 rounded-xl bg-[#E8F3FF] px-3 py-1.5 text-xs font-extrabold text-[#3182F6] transition hover:bg-[#D4E8FF]"
+                className="inline-flex items-center gap-1 rounded-full bg-white px-3.5 py-2 text-xs font-extrabold text-[#4E5968] shadow-[0_2px_10px_rgba(0,0,0,0.04)] transition hover:bg-[#F9FAFB] hover:text-[#191F28]"
               >
-                <Plus className="h-3.5 w-3.5" />
+                <Plus className="h-3.5 w-3.5 text-[#3182F6]" />
                 추가 주문
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsOrderListExpanded((prev) => !prev)}
+                className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-extrabold shadow-[0_2px_10px_rgba(0,0,0,0.04)] transition ${
+                  isOrderListExpanded
+                    ? 'bg-[#3182F6] text-white'
+                    : 'bg-white text-[#191F28] hover:bg-[#F9FAFB]'
+                }`}
+              >
+                <span
+                  className={`h-1.5 w-1.5 rounded-full ${
+                    isOrderListExpanded ? 'bg-white' : 'bg-[#3182F6]'
+                  }`}
+                />
+                <span>내 주문 ({myOrders.length}건)</span>
+                {isOrderListExpanded ? (
+                  <ChevronUp className="h-3.5 w-3.5" />
+                ) : (
+                  <ChevronDown className="h-3.5 w-3.5 text-[#8B95A1]" />
+                )}
               </button>
             </div>
 
-            <div className="max-h-48 space-y-2 overflow-y-auto pr-0.5">
-              {myOrders
-                .slice()
-                .reverse()
-                .map((ord) => {
-                  const isSelected = ord.id === completedOrder.id;
-                  const ordCups = ord.items.reduce((s, i) => s + i.quantity, 0);
-                  const firstItem = ord.items[0]?.menu_name || '메뉴';
-                  const menuSummary =
-                    ord.items.length > 1
-                      ? `${firstItem} 외 ${ord.items.length - 1}건`
-                      : firstItem;
+            {isOrderListExpanded && (
+              <div className="mt-2.5 rounded-[24px] bg-white p-3.5 shadow-[0_8px_28px_rgba(0,0,0,0.08)]">
+                <div className="mb-2 flex items-center justify-between px-1">
+                  <span className="text-[11px] font-bold text-[#8B95A1]">
+                    확인할 주문을 선택하세요
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setIsOrderListExpanded(false)}
+                    className="rounded-lg p-1 text-[#8B95A1] hover:bg-[#F2F4F6] hover:text-[#191F28]"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
 
-                  const statusMeta =
-                    ord.status === 'ready'
-                      ? {
-                          label: '제조완료 · 픽업대기 🎉',
-                          badgeClass: 'bg-[#00C471] text-white',
-                        }
-                      : ord.status === 'preparing'
-                        ? {
-                            label: '제조 중 ☕',
-                            badgeClass: 'bg-[#FFF8E6] text-[#D97706]',
-                          }
-                        : ord.status === 'pending'
+                <div className="max-h-52 space-y-2 overflow-y-auto pr-0.5">
+                  {myOrders
+                    .slice()
+                    .reverse()
+                    .map((ord) => {
+                      const isSelected = ord.id === completedOrder.id;
+                      const ordCups = ord.items.reduce(
+                        (s, i) => s + i.quantity,
+                        0
+                      );
+                      const firstItem = ord.items[0]?.menu_name || '메뉴';
+                      const menuSummary =
+                        ord.items.length > 1
+                          ? `${firstItem} 외 ${ord.items.length - 1}건`
+                          : firstItem;
+
+                      const statusMeta =
+                        ord.status === 'ready'
                           ? {
-                              label: '주문 접수',
-                              badgeClass: 'bg-[#E8F3FF] text-[#3182F6]',
+                              label: '제조완료 · 픽업대기 🎉',
+                              badgeClass: 'bg-[#00C471] text-white',
                             }
-                          : ord.status === 'completed'
+                          : ord.status === 'preparing'
                             ? {
-                                label: '전달 완료 ✓',
-                                badgeClass: 'bg-[#F2F4F6] text-[#8B95A1]',
+                                label: '제조 중 ☕',
+                                badgeClass: 'bg-[#FFF8E6] text-[#D97706]',
                               }
-                            : {
-                                label: '주문 취소',
-                                badgeClass: 'bg-[#FFEEEE] text-[#F04452]',
-                              };
+                            : ord.status === 'pending'
+                              ? {
+                                  label: '주문 접수',
+                                  badgeClass: 'bg-[#E8F3FF] text-[#3182F6]',
+                                }
+                              : ord.status === 'completed'
+                                ? {
+                                    label: '전달 완료 ✓',
+                                    badgeClass: 'bg-[#F2F4F6] text-[#8B95A1]',
+                                  }
+                                : {
+                                    label: '주문 취소',
+                                    badgeClass: 'bg-[#FFEEEE] text-[#F04452]',
+                                  };
 
-                  return (
-                    <button
-                      key={ord.id}
-                      type="button"
-                      onClick={() => {
-                        setDismissedFinishedIds((prev) =>
-                          prev.filter((id) => id !== ord.id)
-                        );
-                        setSelectedOrderId(ord.id);
-                      }}
-                      className={`flex w-full items-center justify-between rounded-2xl border-2 px-3.5 py-2.5 text-left transition ${
-                        isSelected
-                          ? 'border-[#3182F6] bg-[#F4F8FF]'
-                          : 'border-transparent bg-[#F9FAFB] hover:bg-[#F2F4F6]'
-                      }`}
-                    >
-                      <div className="flex min-w-0 items-center gap-2.5">
-                        <span
-                          className={`shrink-0 rounded-xl px-2.5 py-1 font-mono text-sm font-black ${
+                      return (
+                        <button
+                          key={ord.id}
+                          type="button"
+                          onClick={() => {
+                            setDismissedFinishedIds((prev) =>
+                              prev.filter((id) => id !== ord.id)
+                            );
+                            setSelectedOrderId(ord.id);
+                            setIsOrderListExpanded(false);
+                          }}
+                          className={`flex w-full items-center justify-between rounded-2xl border-2 px-3.5 py-2.5 text-left transition ${
                             isSelected
-                              ? 'bg-[#3182F6] text-white'
-                              : 'bg-white text-[#191F28] shadow-2xs'
+                              ? 'border-[#3182F6] bg-[#F4F8FF]'
+                              : 'border-transparent bg-[#F9FAFB] hover:bg-[#F2F4F6]'
                           }`}
                         >
-                          #{ord.order_number}
-                        </span>
-                        <div className="min-w-0">
-                          <p className="truncate text-xs font-extrabold text-[#191F28]">
-                            {menuSummary}{' '}
-                            <span className="text-[#8B95A1]">
-                              ({ordCups}잔)
+                          <div className="flex min-w-0 items-center gap-2.5">
+                            <span
+                              className={`shrink-0 rounded-xl px-2.5 py-1 font-mono text-sm font-black ${
+                                isSelected
+                                  ? 'bg-[#3182F6] text-white'
+                                  : 'bg-white text-[#191F28] shadow-2xs'
+                              }`}
+                            >
+                              #{ord.order_number}
                             </span>
-                          </p>
-                          <p className="text-[11px] font-bold text-[#4E5968]">
-                            {formatCurrency(ord.total_amount)}
-                          </p>
-                        </div>
-                      </div>
+                            <div className="min-w-0">
+                              <p className="truncate text-xs font-extrabold text-[#191F28]">
+                                {menuSummary}{' '}
+                                <span className="text-[#8B95A1]">
+                                  ({ordCups}잔)
+                                </span>
+                              </p>
+                              <p className="text-[11px] font-bold text-[#4E5968]">
+                                {formatCurrency(ord.total_amount)}
+                              </p>
+                            </div>
+                          </div>
 
-                      <span
-                        className={`ml-2 shrink-0 rounded-xl px-2.5 py-1 text-[11px] font-extrabold ${statusMeta.badgeClass}`}
-                      >
-                        {statusMeta.label}
-                      </span>
-                    </button>
-                  );
-                })}
-            </div>
+                          <span
+                            className={`ml-2 shrink-0 rounded-xl px-2.5 py-1 text-[11px] font-extrabold ${statusMeta.badgeClass}`}
+                          >
+                            {statusMeta.label}
+                          </span>
+                        </button>
+                      );
+                    })}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* 실시간 상태 변경 알림 팝업 배너 */}
