@@ -47,9 +47,11 @@ import {
   ChevronRight,
   Clock,
   Coffee,
+  Delete,
   Edit3,
   ExternalLink,
   Flame,
+  Lock,
   Minus,
   PanelLeftClose,
   PanelLeftOpen,
@@ -70,6 +72,11 @@ export default function CounterPosPage() {
   const [cafeSettings, setCafeSettings] = useState<CafeSettings>(
     DEFAULT_CAFE_SETTINGS
   );
+  // POS 앱 관리자 잠금 상태 (PIN 인증)
+  const [isPosUnlocked, setIsPosUnlocked] = useState<boolean>(false);
+  const [posPinInput, setPosPinInput] = useState<string>('');
+  const [posPinError, setPosPinError] = useState<boolean>(false);
+
   const [menus, setMenus] = useState<MenuItem[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [selectedCat, setSelectedCat] = useState<MenuCategory | 'all'>('all');
@@ -121,8 +128,44 @@ export default function CounterPosPage() {
       if (savedDirectPad === 'true') {
         setIsDirectOrderOpen(true);
       }
+      const savedUnlocked = sessionStorage.getItem('church_cafe_pos_unlocked');
+      if (savedUnlocked === 'true') {
+        setIsPosUnlocked(true);
+      }
     }
   }, []);
+
+  const handlePosPinDigit = (digit: string) => {
+    setPosPinError(false);
+    if (posPinInput.length >= 4) return;
+    const nextPin = posPinInput + digit;
+    setPosPinInput(nextPin);
+
+    if (nextPin.length === 4) {
+      if (nextPin === cafeSettings.admin_pin) {
+        setIsPosUnlocked(true);
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem('church_cafe_pos_unlocked', 'true');
+        }
+      } else {
+        setPosPinError(true);
+        setTimeout(() => setPosPinInput(''), 500);
+      }
+    }
+  };
+
+  const handlePosPinBackspace = () => {
+    setPosPinError(false);
+    setPosPinInput((prev) => prev.slice(0, -1));
+  };
+
+  const handleLockPos = () => {
+    setIsPosUnlocked(false);
+    setPosPinInput('');
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem('church_cafe_pos_unlocked');
+    }
+  };
 
   const toggleDirectOrderPad = (nextState?: boolean) => {
     setIsDirectOrderOpen((prev) => {
@@ -332,6 +375,86 @@ export default function CounterPosPage() {
     }
   };
 
+  // ==========================================================================
+  // POS 관리자 잠금 화면 (PIN 4자리 입력)
+  // ==========================================================================
+  if (!isPosUnlocked) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-[#F2F4F6] p-6 text-[#191F28]">
+        <div className="w-full max-w-sm rounded-[28px] bg-white p-8 shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
+          <div className="text-center">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#E8F3FF] text-[#3182F6]">
+              <Lock className="h-7 w-7" />
+            </div>
+            <h1 className="text-xl font-black text-[#191F28]">
+              {cafeSettings.cafe_name} POS
+            </h1>
+            <p className="mt-1 text-xs font-semibold text-[#8B95A1]">
+              포스기 실행을 위해 4자리 관리자 PIN을 입력해 주세요
+            </p>
+          </div>
+
+          <div className="my-7 flex justify-center gap-4">
+            {[0, 1, 2, 3].map((idx) => {
+              const filled = idx < posPinInput.length;
+              return (
+                <div
+                  key={idx}
+                  className={`h-3.5 w-3.5 rounded-full transition-all ${
+                    posPinError
+                      ? 'bg-[#F04452] scale-110'
+                      : filled
+                        ? 'bg-[#3182F6] scale-110'
+                        : 'bg-[#E5E8EB]'
+                  }`}
+                />
+              );
+            })}
+          </div>
+
+          {posPinError && (
+            <p className="mb-4 text-center text-xs font-bold text-[#F04452]">
+              PIN 번호가 일치하지 않습니다. 다시 입력해 주세요.
+            </p>
+          )}
+
+          <div className="grid grid-cols-3 gap-2.5">
+            {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((digit) => (
+              <button
+                key={digit}
+                type="button"
+                onClick={() => handlePosPinDigit(digit)}
+                className="rounded-2xl bg-[#F2F4F6] py-3.5 text-xl font-black text-[#191F28] transition hover:bg-[#E5E8EB] active:scale-95"
+              >
+                {digit}
+              </button>
+            ))}
+            <Link
+              href="/"
+              className="flex items-center justify-center rounded-2xl bg-[#F2F4F6] py-3.5 text-xs font-extrabold text-[#4E5968] hover:bg-[#E5E8EB] hover:text-[#191F28]"
+            >
+              홈으로
+            </Link>
+            <button
+              type="button"
+              onClick={() => handlePosPinDigit('0')}
+              className="rounded-2xl bg-[#F2F4F6] py-3.5 text-xl font-black text-[#191F28] transition hover:bg-[#E5E8EB] active:scale-95"
+            >
+              0
+            </button>
+            <button
+              type="button"
+              onClick={handlePosPinBackspace}
+              className="flex items-center justify-center rounded-2xl bg-[#F2F4F6] py-3.5 text-[#4E5968] hover:bg-[#E5E8EB] active:scale-95"
+            >
+              <Delete className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-screen w-screen flex-col overflow-hidden bg-[#F2F4F6] text-[#191F28]">
       {/* 상단 POS 헤더 바 (Toss 스타일 정돈된 그룹형 헤더) */}
@@ -460,6 +583,17 @@ export default function CounterPosPage() {
               <BarChart3 className="h-3.5 w-3.5 shrink-0" />
               <span>일일 정산</span>
             </Link>
+
+            {/* POS 화면 잠금 버튼 */}
+            <button
+              type="button"
+              onClick={handleLockPos}
+              title="POS 화면을 잠급니다"
+              className="inline-flex items-center gap-1 whitespace-nowrap rounded-2xl bg-[#F2F4F6] px-3 py-2 text-xs font-bold text-[#4E5968] transition hover:bg-[#E5E8EB] hover:text-[#191F28]"
+            >
+              <Lock className="h-3.5 w-3.5 shrink-0" />
+              <span>잠금</span>
+            </button>
           </div>
         </div>
       </header>
