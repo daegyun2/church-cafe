@@ -1,18 +1,48 @@
 import { OrderStatus } from '@/types/cafe';
 
+let sharedAudioCtx: AudioContext | null = null;
+
+function getOrCreateAudioContext(): AudioContext | null {
+  if (typeof window === 'undefined') return null;
+  const AudioCtx =
+    window.AudioContext ||
+    (window as unknown as { webkitAudioContext: typeof AudioContext })
+      .webkitAudioContext;
+  if (!AudioCtx) return null;
+  if (!sharedAudioCtx) {
+    sharedAudioCtx = new AudioCtx();
+  }
+  if (sharedAudioCtx.state === 'suspended') {
+    sharedAudioCtx.resume().catch(() => {});
+  }
+  return sharedAudioCtx;
+}
+
+/**
+ * 모바일(특히 아이폰 Safari) 자동재생 차단 해제를 위해 사용자 터치 시점에 호출
+ */
+export function unlockAudioOnUserGesture(): void {
+  try {
+    const ctx = getOrCreateAudioContext();
+    if (!ctx) return;
+    const buffer = ctx.createBuffer(1, 1, 22050);
+    const source = ctx.createBufferSource();
+    source.buffer = buffer;
+    source.connect(ctx.destination);
+    source.start(0);
+  } catch {
+    // Ignore
+  }
+}
+
 /**
  * 별도의 외부 오디오 파일 없이 Web Audio API로 카페 알림 차임벨 소리 재생
  */
 export function playStatusAlertSound(status: OrderStatus): void {
   if (typeof window === 'undefined') return;
   try {
-    const AudioCtx =
-      window.AudioContext ||
-      (window as unknown as { webkitAudioContext: typeof AudioContext })
-        .webkitAudioContext;
-    if (!AudioCtx) return;
-
-    const ctx = new AudioCtx();
+    const ctx = getOrCreateAudioContext();
+    if (!ctx) return;
     const now = ctx.currentTime;
 
     const playTone = (freq: number, startOffset: number, duration: number) => {

@@ -12,6 +12,7 @@ import {
 import {
   playStatusAlertSound,
   triggerCustomerPhoneAlert,
+  unlockAudioOnUserGesture,
 } from '@/lib/notifications';
 import {
   createOrder,
@@ -240,6 +241,7 @@ export default function GuestOrderPage() {
 
   const handlePlaceOrder = async (e: React.FormEvent) => {
     e.preventDefault();
+    unlockAudioOnUserGesture();
     if (cart.length === 0) return;
     if (!customerName.trim()) {
       alert('주문자 성함을 입력해 주세요.');
@@ -378,7 +380,7 @@ export default function GuestOrderPage() {
               {completedOrder.status === 'cancelled' && '주문이 취소되었습니다.'}
             </h1>
             <p className="mt-1 text-xs font-semibold text-slate-500">
-              이 화면을 켜두시면 수신확인·제조중·제조완료 시 알림음과 진동이 울립니다
+              이 화면을 켜두시면 수신확인 · 제조중 · 제조완료 상태가 실시간으로 안내됩니다
             </p>
           </div>
 
@@ -390,26 +392,6 @@ export default function GuestOrderPage() {
                   <BellRing className="h-4 w-4 text-amber-600" />
                   실시간 음료 진행 상태
                 </span>
-                <div className="flex items-center gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => playStatusAlertSound('ready')}
-                    className="inline-flex items-center gap-1 rounded-lg border border-slate-300 bg-white px-2 py-1 text-[11px] font-bold text-slate-600 hover:bg-slate-100"
-                  >
-                    <Volume2 className="h-3 w-3 text-amber-600" />
-                    벨소리 테스트
-                  </button>
-                  {notifPermission !== 'granted' && (
-                    <button
-                      type="button"
-                      onClick={requestPushPermission}
-                      className="inline-flex items-center gap-1 rounded-lg bg-amber-500 px-2.5 py-1 text-[11px] font-black text-slate-950"
-                    >
-                      <Bell className="h-3 w-3" />
-                      푸시알림 켜기
-                    </button>
-                  )}
-                </div>
               </div>
 
               <div className="grid grid-cols-4 gap-1.5">
