@@ -334,116 +334,127 @@ export default function CounterPosPage() {
 
   return (
     <div className="flex h-screen w-screen flex-col overflow-hidden bg-[#F2F4F6] text-[#191F28]">
-      {/* 상단 POS 헤더 바 (Toss 스타일 깔끔한 화이트 헤더) */}
-      <header className="flex shrink-0 items-center justify-between border-b border-[#E5E8EB] bg-white px-5 py-3">
-        <div className="flex items-center gap-3">
+      {/* 상단 POS 헤더 바 (Toss 스타일 정돈된 그룹형 헤더) */}
+      <header className="flex shrink-0 items-center justify-between border-b border-[#E5E8EB] bg-white px-4 py-2.5 sm:px-5">
+        {/* 좌측: 카페 브랜드 & 네트워크 상태 */}
+        <div className="flex items-center gap-2.5">
           <Link
             href="/"
-            className="flex items-center gap-2 rounded-2xl bg-[#3182F6] px-3.5 py-2 text-sm font-extrabold text-white shadow-2xs transition hover:bg-[#1B64DA]"
+            className="flex items-center gap-1.5 whitespace-nowrap rounded-2xl bg-[#3182F6] px-3.5 py-2 text-xs font-extrabold text-white shadow-2xs transition hover:bg-[#1B64DA]"
           >
-            <Coffee className="h-4 w-4" />
-            {cafeSettings.cafe_name} POS
+            <Coffee className="h-4 w-4 shrink-0" />
+            <span>{cafeSettings.cafe_name} POS</span>
           </Link>
 
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-[#E8FAF0] px-3 py-1.5 text-xs font-extrabold text-[#00A859]">
-            <Wifi className="h-3.5 w-3.5" />
-            {isSupabaseConfigured ? '실시간 주문 연결됨' : '기기 내부 모드'}
+          <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[#E8FAF0] px-3 py-1.5 text-xs font-bold text-[#00A859]">
+            <Wifi className="h-3.5 w-3.5 shrink-0" />
+            <span>{isSupabaseConfigured ? '실시간 연결' : '로컬 모드'}</span>
           </span>
 
-          <span className="hidden text-xs font-semibold text-[#8B95A1] xl:inline">
-            입금계좌: {cafeSettings.bank_name} {cafeSettings.account_number} (
-            {cafeSettings.account_holder})
+          <span className="hidden whitespace-nowrap text-xs font-medium text-[#8B95A1] 2xl:inline">
+            계좌: {cafeSettings.bank_name} {cafeSettings.account_number}
           </span>
         </div>
 
-        <div className="flex items-center gap-2">
-          {/* 카운터 주문 패드 토글 버튼 (필요할 때만 켜기) */}
-          <button
-            type="button"
-            onClick={() => toggleDirectOrderPad()}
-            className={`inline-flex items-center gap-1.5 rounded-2xl px-3.5 py-2 text-xs font-extrabold transition ${
-              isDirectOrderOpen
-                ? 'bg-[#3182F6] text-white shadow-xs'
-                : 'bg-[#F2F4F6] text-[#191F28] hover:bg-[#E5E8EB]'
-            }`}
-          >
-            {isDirectOrderOpen ? (
-              <PanelLeftClose className="h-4 w-4" />
-            ) : (
-              <PanelLeftOpen className="h-4 w-4 text-[#3182F6]" />
-            )}
-            <span>
-              {isDirectOrderOpen ? '직접 주문 닫기' : '카운터 직접 주문'}
-            </span>
-            {posCart.length > 0 && !isDirectOrderOpen && (
-              <span className="rounded-full bg-[#3182F6] px-1.5 py-0.2 text-[10px] font-black text-white">
-                {posCart.reduce((s, i) => s + i.quantity, 0)}
+        {/* 우측: 핵심 작업 그룹별 분리 (주문 운영 / 카페 관리 / 이동 바로가기) */}
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          {/* 그룹 1: 핵심 주문 운영 (직접 주문 + QR 주문 제어) */}
+          <div className="flex items-center gap-1 rounded-2xl bg-[#F2F4F6] p-1">
+            <button
+              type="button"
+              onClick={() => toggleDirectOrderPad()}
+              className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl px-3 py-1.5 text-xs font-extrabold transition ${
+                isDirectOrderOpen
+                  ? 'bg-[#3182F6] text-white shadow-xs'
+                  : 'text-[#191F28] hover:bg-white hover:shadow-2xs'
+              }`}
+            >
+              {isDirectOrderOpen ? (
+                <PanelLeftClose className="h-3.5 w-3.5 shrink-0" />
+              ) : (
+                <PanelLeftOpen className="h-3.5 w-3.5 shrink-0 text-[#3182F6]" />
+              )}
+              <span>{isDirectOrderOpen ? '직접 주문 닫기' : '직접 주문'}</span>
+              {posCart.length > 0 && !isDirectOrderOpen && (
+                <span className="rounded-full bg-[#3182F6] px-1.5 py-0.2 text-[10px] font-black text-white">
+                  {posCart.reduce((s, i) => s + i.quantity, 0)}
+                </span>
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={async () => {
+                const nextState = cafeSettings.is_qr_order_enabled === false;
+                await updateCafeSettings({
+                  ...cafeSettings,
+                  is_qr_order_enabled: nextState,
+                });
+                await loadAllData();
+              }}
+              title="클릭하여 손님 모바일 QR 주문 접수를 잠시 멈추거나 다시 엽니다"
+              className={`inline-flex items-center gap-1 whitespace-nowrap rounded-xl px-2.5 py-1.5 text-xs font-extrabold transition ${
+                cafeSettings.is_qr_order_enabled !== false
+                  ? 'text-[#00A859] hover:bg-white hover:shadow-2xs'
+                  : 'animate-pulse bg-[#F04452] text-white shadow-xs'
+              }`}
+            >
+              <span className="text-[10px]">
+                {cafeSettings.is_qr_order_enabled !== false ? '🟢' : '⏸️'}
               </span>
-            )}
-          </button>
-
-          {/* 원터치 QR 주문 열림 / 일시중지(예배시간·준비중) 토글 버튼 */}
-          <button
-            type="button"
-            onClick={async () => {
-              const nextState = cafeSettings.is_qr_order_enabled === false;
-              await updateCafeSettings({
-                ...cafeSettings,
-                is_qr_order_enabled: nextState,
-              });
-              await loadAllData();
-            }}
-            title="클릭하여 손님 모바일 QR 주문 접수를 잠시 멈추거나 다시 엽니다"
-            className={`inline-flex items-center gap-1.5 rounded-2xl px-3.5 py-2 text-xs font-extrabold transition ${
-              cafeSettings.is_qr_order_enabled !== false
-                ? 'bg-[#E8FAF0] text-[#00A859] hover:bg-[#D1F5E1]'
-                : 'animate-pulse bg-[#F04452] text-white shadow-xs hover:bg-[#D9303E]'
-            }`}
-          >
-            {cafeSettings.is_qr_order_enabled !== false
-              ? '🟢 QR주문 열림'
-              : '⏸️ QR주문 일시중지됨'}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setManageModalTab('menus')}
-            className="inline-flex items-center gap-1.5 rounded-2xl bg-[#E8F3FF] px-3.5 py-2 text-xs font-extrabold text-[#3182F6] transition hover:bg-[#D4E8FF]"
-          >
-            <Settings2 className="h-4 w-4" />
-            메뉴 · 가격 · 품절 관리
-            {menus.some((m) => m.is_sold_out) && (
-              <span className="rounded-full bg-[#F04452] px-1.5 py-0.5 text-[10px] font-extrabold text-white">
-                품절 {menus.filter((m) => m.is_sold_out).length}
+              <span>
+                {cafeSettings.is_qr_order_enabled !== false
+                  ? 'QR 열림'
+                  : 'QR 중지'}
               </span>
-            )}
-          </button>
+            </button>
+          </div>
 
-          <button
-            type="button"
-            onClick={() => setManageModalTab('settings')}
-            className="inline-flex items-center gap-1.5 rounded-2xl bg-[#F2F4F6] px-3.5 py-2 text-xs font-extrabold text-[#4E5968] transition hover:bg-[#E5E8EB]"
-          >
-            <Building2 className="h-4 w-4" />
-            카페 · 계좌 · PIN 설정
-          </button>
+          {/* 그룹 2: 카페 관리 모달 (메뉴·품절 / 카페·계좌 설정) */}
+          <div className="flex items-center gap-1 rounded-2xl bg-[#F2F4F6] p-1">
+            <button
+              type="button"
+              onClick={() => setManageModalTab('menus')}
+              className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl px-3 py-1.5 text-xs font-extrabold text-[#3182F6] transition hover:bg-white hover:shadow-2xs"
+            >
+              <Settings2 className="h-3.5 w-3.5 shrink-0" />
+              <span>메뉴·품절</span>
+              {menus.some((m) => m.is_sold_out) && (
+                <span className="rounded-full bg-[#F04452] px-1.5 py-0.2 text-[10px] font-black text-white">
+                  {menus.filter((m) => m.is_sold_out).length}
+                </span>
+              )}
+            </button>
 
-          <Link
-            href="/order"
-            target="_blank"
-            className="inline-flex items-center gap-1.5 rounded-2xl bg-[#F2F4F6] px-3 py-2 text-xs font-bold text-[#4E5968] hover:bg-[#E5E8EB]"
-          >
-            손님 QR화면
-            <ExternalLink className="h-3.5 w-3.5" />
-          </Link>
+            <button
+              type="button"
+              onClick={() => setManageModalTab('settings')}
+              className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl px-3 py-1.5 text-xs font-extrabold text-[#4E5968] transition hover:bg-white hover:text-[#191F28] hover:shadow-2xs"
+            >
+              <Building2 className="h-3.5 w-3.5 shrink-0" />
+              <span>설정</span>
+            </button>
+          </div>
 
-          <Link
-            href="/admin"
-            className="inline-flex items-center gap-1.5 rounded-2xl bg-[#191F28] px-3.5 py-2 text-xs font-extrabold text-white hover:bg-[#333D4B]"
-          >
-            <BarChart3 className="h-4 w-4" />
-            일일 정산
-          </Link>
+          {/* 그룹 3: 바로가기 링크 (손님 화면 새 탭 / 일일 정산) */}
+          <div className="flex items-center gap-1">
+            <Link
+              href="/order"
+              target="_blank"
+              className="inline-flex items-center gap-1 whitespace-nowrap rounded-2xl bg-[#F2F4F6] px-3 py-2 text-xs font-bold text-[#4E5968] transition hover:bg-[#E5E8EB] hover:text-[#191F28]"
+            >
+              <span>손님 QR</span>
+              <ExternalLink className="h-3 w-3 shrink-0" />
+            </Link>
+
+            <Link
+              href="/admin"
+              className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-2xl bg-[#191F28] px-3.5 py-2 text-xs font-extrabold text-white transition hover:bg-[#333D4B]"
+            >
+              <BarChart3 className="h-3.5 w-3.5 shrink-0" />
+              <span>일일 정산</span>
+            </Link>
+          </div>
         </div>
       </header>
 
