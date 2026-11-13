@@ -208,7 +208,6 @@ export function generateQrMatrix(text: string): boolean[][] {
   }
 
   // Dark module & Format reserved areas
-  setFunctionModule(size - 8, 8, true);
   for (let i = 0; i < 9; i++) {
     if (i !== 6) {
       if (!isFunction[8][i]) setFunctionModule(8, i, false);
@@ -217,8 +216,12 @@ export function generateQrMatrix(text: string): boolean[][] {
   }
   for (let i = 0; i < 8; i++) {
     setFunctionModule(8, size - 1 - i, false);
-    setFunctionModule(size - 1 - i, 8, false);
+    if (i < 7) {
+      setFunctionModule(size - 1 - i, 8, false);
+    }
   }
+  // Always-dark module at (size - 8, 8)
+  setFunctionModule(size - 8, 8, true);
 
   // Zigzag 데이터 배치
   let bitIdx = 0;
@@ -247,19 +250,25 @@ export function generateQrMatrix(text: string): boolean[][] {
   }
 
   // Format information for ECC Level L (01) + Mask 0 (000) -> 0x77c4
+  // ISO/IEC 18004 standard placement (bit 0 = LSB, bit 14 = MSB)
   const formatBits = 0x77c4;
   const getFormatBit = (i: number) => ((formatBits >>> i) & 1) === 1;
 
-  for (let i = 0; i <= 5; i++) setFunctionModule(8, i, getFormatBit(i));
-  setFunctionModule(8, 7, getFormatBit(6));
+  // 1st copy: around top-left finder pattern
+  for (let i = 0; i <= 5; i++) setFunctionModule(i, 8, getFormatBit(i));
+  setFunctionModule(7, 8, getFormatBit(6));
   setFunctionModule(8, 8, getFormatBit(7));
-  setFunctionModule(7, 8, getFormatBit(8));
-  for (let i = 9; i < 15; i++) setFunctionModule(14 - i, 8, getFormatBit(i));
+  setFunctionModule(8, 7, getFormatBit(8));
+  for (let i = 9; i < 15; i++) setFunctionModule(8, 14 - i, getFormatBit(i));
 
-  for (let i = 0; i < 8; i++)
-    setFunctionModule(size - 1 - i, 8, getFormatBit(i));
-  for (let i = 8; i < 15; i++)
-    setFunctionModule(8, size - 15 + i, getFormatBit(i));
+  // 2nd copy: top-right horizontal (bits 0..7) & bottom-left vertical (bits 8..14)
+  for (let i = 0; i < 8; i++) {
+    setFunctionModule(8, size - 1 - i, getFormatBit(i));
+  }
+  for (let i = 8; i < 15; i++) {
+    setFunctionModule(size - 15 + i, 8, getFormatBit(i));
+  }
+  setFunctionModule(size - 8, 8, true);
 
   return modules;
 }

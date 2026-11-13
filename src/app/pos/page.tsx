@@ -29,6 +29,7 @@ import {
   MenuCategory,
   MenuItem,
   Order,
+  OrderStatus,
   PaymentMethod,
   TempOption,
 } from '@/types/cafe';
@@ -39,7 +40,9 @@ import {
   BarChart3,
   BellRing,
   Building2,
+  Check,
   CheckCircle2,
+  CheckSquare,
   Clock,
   Coffee,
   Edit3,
@@ -51,9 +54,11 @@ import {
   RotateCcw,
   Settings2,
   Snowflake,
+  Square,
   Trash2,
   UserPlus,
   Wifi,
+  X,
   XCircle,
 } from 'lucide-react';
 
@@ -80,6 +85,11 @@ export default function CounterPosPage() {
   const [cardScale, setCardScale] = useState<'compact' | 'normal' | 'large'>(
     'normal'
   );
+  // 주문 일괄 선택(체크박스 & 드래그) 및 일괄 상태 변경
+  const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
+  const [isDragSelecting, setIsDragSelecting] = useState(false);
+  const [dragSelectTargetState, setDragSelectTargetState] = useState(true);
+  const [bulkUpdating, setBulkUpdating] = useState(false);
 
   // 모달 상태
   const [editingOrder, setEditingOrder] = useState<Order | null>(null);
@@ -242,6 +252,59 @@ export default function CounterPosPage() {
       : queueTab === 'completed'
         ? completedOrders
         : cancelledOrders;
+
+  const displayedOrderIds = displayedOrders.map((o) => o.id);
+  const validSelectedIds = selectedOrderIds.filter((id) =>
+    displayedOrderIds.includes(id)
+  );
+  const isAllDisplayedSelected =
+    displayedOrders.length > 0 &&
+    validSelectedIds.length === displayedOrders.length;
+
+  useEffect(() => {
+    const stopDrag = () => setIsDragSelecting(false);
+    window.addEventListener('pointerup', stopDrag);
+    return () => window.removeEventListener('pointerup', stopDrag);
+  }, []);
+
+  const toggleOrderSelection = (orderId: string) => {
+    setSelectedOrderIds((prev) =>
+      prev.includes(orderId)
+        ? prev.filter((id) => id !== orderId)
+        : [...prev, orderId]
+    );
+  };
+
+  const handleToggleSelectAll = () => {
+    if (isAllDisplayedSelected) {
+      setSelectedOrderIds([]);
+    } else {
+      setSelectedOrderIds(displayedOrderIds);
+    }
+  };
+
+  const handleBulkUpdateStatus = async (targetStatus: OrderStatus) => {
+    if (validSelectedIds.length === 0 || bulkUpdating) return;
+    if (
+      targetStatus === 'cancelled' &&
+      !window.confirm(
+        `선택한 ${validSelectedIds.length}건의 주문을 일괄 취소하시겠습니까?`
+      )
+    ) {
+      return;
+    }
+
+    setBulkUpdating(true);
+    try {
+      for (const id of validSelectedIds) {
+        await updateOrderStatus(id, targetStatus);
+      }
+      setSelectedOrderIds([]);
+      await loadAllData();
+    } finally {
+      setBulkUpdating(false);
+    }
+  };
 
   return (
     <div className="flex h-screen w-screen flex-col overflow-hidden bg-slate-100">
@@ -600,7 +663,10 @@ export default function CounterPosPage() {
             <div className="flex flex-wrap items-center gap-2">
               <button
                 type="button"
-                onClick={() => setQueueTab('active')}
+                onClick={() => {
+                  setQueueTab('active');
+                  setSelectedOrderIds([]);
+                }}
                 className={`flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-black transition ${
                   queueTab === 'active'
                     ? 'bg-slate-900 text-white shadow-xs'
@@ -616,7 +682,10 @@ export default function CounterPosPage() {
 
               <button
                 type="button"
-                onClick={() => setQueueTab('completed')}
+                onClick={() => {
+                  setQueueTab('completed');
+                  setSelectedOrderIds([]);
+                }}
                 className={`flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-extrabold transition ${
                   queueTab === 'completed'
                     ? 'bg-emerald-700 text-white'
@@ -629,7 +698,10 @@ export default function CounterPosPage() {
 
               <button
                 type="button"
-                onClick={() => setQueueTab('cancelled')}
+                onClick={() => {
+                  setQueueTab('cancelled');
+                  setSelectedOrderIds([]);
+                }}
                 className={`flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-extrabold transition ${
                   queueTab === 'cancelled'
                     ? 'bg-rose-700 text-white'
@@ -639,6 +711,25 @@ export default function CounterPosPage() {
                 <XCircle className="h-3.5 w-3.5" />
                 취소됨 ({cancelledOrders.length})
               </button>
+
+              {displayedOrders.length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleToggleSelectAll}
+                  className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-black transition ${
+                    isAllDisplayedSelected
+                      ? 'border-amber-500 bg-amber-50 text-amber-900'
+                      : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100'
+                  }`}
+                >
+                  {isAllDisplayedSelected ? (
+                    <CheckSquare className="h-3.5 w-3.5 text-amber-600" />
+                  ) : (
+                    <Square className="h-3.5 w-3.5 text-slate-400" />
+                  )}
+                  {isAllDisplayedSelected ? '전체 해제' : '전체 선택'}
+                </button>
+              )}
             </div>
 
             <div className="flex items-center gap-3">
@@ -680,8 +771,89 @@ export default function CounterPosPage() {
             </div>
           </div>
 
+          {/* 선택된 주문이 있을 때 나타나는 상단 고정 일괄 처리 액션 바 */}
+          {validSelectedIds.length > 0 && (
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b-2 border-amber-400 bg-slate-900 px-5 py-3 text-white shadow-md">
+              <div className="flex items-center gap-2">
+                <span className="rounded-lg bg-amber-500 px-2.5 py-1 text-xs font-black text-slate-950">
+                  {validSelectedIds.length}건 선택됨
+                </span>
+                <span className="text-xs font-bold text-slate-300">
+                  (
+                  {displayedOrders
+                    .filter((o) => validSelectedIds.includes(o.id))
+                    .map((o) => `#${o.order_number}`)
+                    .join(', ')}
+                  )
+                </span>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-1.5">
+                {queueTab === 'active' ? (
+                  <>
+                    <button
+                      type="button"
+                      disabled={bulkUpdating}
+                      onClick={() => handleBulkUpdateStatus('preparing')}
+                      className="inline-flex items-center gap-1 rounded-xl bg-amber-500 px-3 py-2 text-xs font-black text-slate-950 shadow-2xs transition hover:bg-amber-400 disabled:opacity-50"
+                    >
+                      <Play className="h-3.5 w-3.5" />
+                      일괄 제조중
+                    </button>
+                    <button
+                      type="button"
+                      disabled={bulkUpdating}
+                      onClick={() => handleBulkUpdateStatus('ready')}
+                      className="inline-flex items-center gap-1 rounded-xl bg-blue-600 px-3 py-2 text-xs font-black text-white shadow-2xs transition hover:bg-blue-500 disabled:opacity-50"
+                    >
+                      <BellRing className="h-3.5 w-3.5" />
+                      일괄 완료·호출
+                    </button>
+                    <button
+                      type="button"
+                      disabled={bulkUpdating}
+                      onClick={() => handleBulkUpdateStatus('completed')}
+                      className="inline-flex items-center gap-1 rounded-xl bg-emerald-600 px-3.5 py-2 text-xs font-black text-white shadow-2xs transition hover:bg-emerald-500 disabled:opacity-50"
+                    >
+                      <CheckCircle2 className="h-3.5 w-3.5" />
+                      일괄 전달완료
+                    </button>
+                    <button
+                      type="button"
+                      disabled={bulkUpdating}
+                      onClick={() => handleBulkUpdateStatus('cancelled')}
+                      className="inline-flex items-center gap-1 rounded-xl border border-rose-400/50 bg-rose-950/60 px-2.5 py-2 text-xs font-extrabold text-rose-200 transition hover:bg-rose-900 disabled:opacity-50"
+                    >
+                      <XCircle className="h-3.5 w-3.5" />
+                      일괄 취소
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    disabled={bulkUpdating}
+                    onClick={() => handleBulkUpdateStatus('pending')}
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-amber-500 px-3.5 py-2 text-xs font-black text-slate-950 shadow-2xs transition hover:bg-amber-400 disabled:opacity-50"
+                  >
+                    <RotateCcw className="h-3.5 w-3.5" />
+                    선택 주문 일괄 대기열로 복구
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => setSelectedOrderIds([])}
+                  className="ml-1 inline-flex items-center gap-1 rounded-xl bg-slate-800 px-2.5 py-2 text-xs font-bold text-slate-300 hover:bg-slate-700"
+                >
+                  <X className="h-3.5 w-3.5" />
+                  해제
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* 대기열 카드 리스트 */}
-          <div className="flex-1 overflow-y-auto p-4">
+          <div className="flex-1 overflow-y-auto p-4 select-none">
             {displayedOrders.length === 0 ? (
               <div className="flex h-full flex-col items-center justify-center rounded-3xl border-2 border-dashed border-slate-300 bg-white/60 p-12 text-center">
                 <Coffee className="h-12 w-12 text-slate-300" />
@@ -722,10 +894,22 @@ export default function CounterPosPage() {
                     order.status === 'pending' ||
                     order.status === 'preparing' ||
                     order.status === 'ready';
+                  const isSelected = validSelectedIds.includes(order.id);
 
                   return (
                     <div
                       key={order.id}
+                      onPointerEnter={() => {
+                        if (!isDragSelecting) return;
+                        setSelectedOrderIds((prev) => {
+                          if (dragSelectTargetState) {
+                            return prev.includes(order.id)
+                              ? prev
+                              : [...prev, order.id];
+                          }
+                          return prev.filter((id) => id !== order.id);
+                        });
+                      }}
                       className={`flex flex-col justify-between rounded-2xl border-2 bg-white shadow-md transition ${
                         cardScale === 'compact'
                           ? 'p-3'
@@ -733,15 +917,17 @@ export default function CounterPosPage() {
                             ? 'p-6'
                             : 'p-5'
                       } ${
-                        order.status === 'ready'
-                          ? 'border-emerald-500 ring-2 ring-emerald-200'
-                          : order.status === 'preparing'
-                            ? 'border-amber-500'
-                            : order.status === 'pending'
-                              ? 'border-slate-800'
-                              : order.status === 'completed'
-                                ? 'border-emerald-200 opacity-90'
-                                : 'border-rose-200 opacity-75'
+                        isSelected
+                          ? 'border-amber-500 bg-amber-50/20 ring-4 ring-amber-400/50'
+                          : order.status === 'ready'
+                            ? 'border-emerald-500 ring-2 ring-emerald-200'
+                            : order.status === 'preparing'
+                              ? 'border-amber-500'
+                              : order.status === 'pending'
+                                ? 'border-slate-800'
+                                : order.status === 'completed'
+                                  ? 'border-emerald-200 opacity-90'
+                                  : 'border-rose-200 opacity-75'
                       }`}
                     >
                       <div>
@@ -756,8 +942,33 @@ export default function CounterPosPage() {
                         >
                           <div>
                             <div className="flex flex-wrap items-center gap-1.5">
+                              {/* 체크박스 (클릭 또는 드래그로 여러 주문 연속 선택 가능) */}
+                              <button
+                                type="button"
+                                onPointerDown={(e) => {
+                                  e.preventDefault();
+                                  const nextState = !isSelected;
+                                  setIsDragSelecting(true);
+                                  setDragSelectTargetState(nextState);
+                                  toggleOrderSelection(order.id);
+                                }}
+                                title="클릭하거나 드래그하여 여러 주문을 일괄 선택"
+                                className={`flex items-center justify-center rounded-lg border-2 transition ${
+                                  cardScale === 'large'
+                                    ? 'h-7 w-7'
+                                    : 'h-6 w-6'
+                                } ${
+                                  isSelected
+                                    ? 'border-amber-500 bg-amber-500 text-slate-950 shadow-2xs'
+                                    : 'border-slate-300 bg-white text-transparent hover:border-amber-400'
+                                }`}
+                              >
+                                <Check className="h-4 w-4 stroke-[3]" />
+                              </button>
+
                               <span
-                                className={`rounded-lg bg-slate-900 font-black text-amber-400 ${
+                                onClick={() => toggleOrderSelection(order.id)}
+                                className={`cursor-pointer rounded-lg bg-slate-900 font-black text-amber-400 ${
                                   cardScale === 'compact'
                                     ? 'px-2 py-0.5 text-[11px]'
                                     : cardScale === 'large'

@@ -907,12 +907,19 @@ export default function AdminSettlementPage() {
                   봉사자 개인 스마트폰 카메라로 스캔
                 </span>
 
-                <div className="my-4 rounded-2xl border-2 border-slate-900 bg-white p-4 shadow-md">
+                <div className="my-4 rounded-2xl border-2 border-slate-900 bg-white p-3 shadow-md">
                   <svg
-                    viewBox={`0 0 ${qrMatrix.length} ${qrMatrix.length}`}
-                    className="h-44 w-44"
+                    viewBox={`-4 -4 ${qrMatrix.length + 8} ${qrMatrix.length + 8}`}
+                    className="h-52 w-52"
                     shapeRendering="crispEdges"
                   >
+                    <rect
+                      x={-4}
+                      y={-4}
+                      width={qrMatrix.length + 8}
+                      height={qrMatrix.length + 8}
+                      fill="#ffffff"
+                    />
                     {qrMatrix.map((row, rIdx) =>
                       row.map((cell, cIdx) =>
                         cell ? (
@@ -922,7 +929,7 @@ export default function AdminSettlementPage() {
                             y={rIdx}
                             width={1}
                             height={1}
-                            fill="#0f172a"
+                            fill="#000000"
                           />
                         ) : null
                       )
