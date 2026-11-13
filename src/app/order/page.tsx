@@ -51,6 +51,35 @@ import {
 } from 'lucide-react';
 
 const ACTIVE_ORDER_STORAGE_KEY = 'church_cafe_active_guest_order_id';
+const ACTIVE_ORDER_IDS_STORAGE_KEY = 'church_cafe_active_guest_order_ids';
+
+function loadSavedOrderIds(): string[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const rawList = localStorage.getItem(ACTIVE_ORDER_IDS_STORAGE_KEY);
+    if (rawList) {
+      const parsed = JSON.parse(rawList);
+      if (Array.isArray(parsed)) {
+        return parsed.filter((id): id is string => typeof id === 'string');
+      }
+    }
+    const single = localStorage.getItem(ACTIVE_ORDER_STORAGE_KEY);
+    return single ? [single] : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveOrderIdsToStorage(ids: string[]): void {
+  if (typeof window === 'undefined') return;
+  const unique = Array.from(new Set(ids));
+  localStorage.setItem(ACTIVE_ORDER_IDS_STORAGE_KEY, JSON.stringify(unique));
+  if (unique.length > 0) {
+    localStorage.setItem(ACTIVE_ORDER_STORAGE_KEY, unique[unique.length - 1]);
+  } else {
+    localStorage.removeItem(ACTIVE_ORDER_STORAGE_KEY);
+  }
+}
 
 export default function GuestOrderPage() {
   const [cafeSettings, setCafeSettings] = useState<CafeSettings>(
@@ -69,13 +98,23 @@ export default function GuestOrderPage() {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('transfer');
   const [submitting, setSubmitting] = useState(false);
 
-  const [completedOrder, setCompletedOrder] = useState<Order | null>(null);
+  // 한 스마트폰에서 여러 건 주문 시 모든 내 주문을 동시에 추적
+  const [myOrders, setMyOrders] = useState<Order[]>([]);
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+  const [isViewingMenu, setIsViewingMenu] = useState<boolean>(false);
+
   const [activeQueueOrders, setActiveQueueOrders] = useState<Order[]>([]);
   const [copied, setCopied] = useState(false);
   const [liveAlertBanner, setLiveAlertBanner] = useState<string | null>(null);
   const [notifPermission, setNotifPermission] = useState<string>('default');
 
-  const prevStatusRef = useRef<OrderStatus | null>(null);
+  const prevStatusMapRef = useRef<Record<string, OrderStatus>>({});
+
+  const completedOrder =
+    !isViewingMenu && myOrders.length > 0
+      ? myOrders.find((o) => o.id === selectedOrderId) ||
+        myOrders[myOrders.length - 1]
+      : null;
 
   const loadMenus = useCallback(async () => {
     const [settingsData, data, todayOrders] = await Promise.all([
@@ -96,35 +135,51 @@ export default function GuestOrderPage() {
     setActiveQueueOrders(waitingList);
   }, []);
 
-  // 진행 중인 주문 실시간 조회 및 상태 변경 감지 (알람 트리거)
-  const refreshTrackedOrder = useCallback(async (orderId: string) => {
-    const latest = await fetchOrderById(orderId);
-    if (!latest) return;
-
-    setCompletedOrder(latest);
-
-    if (prevStatusRef.current && prevStatusRef.current !== latest.status) {
-      triggerCustomerPhoneAlert(
-        latest.order_number,
-        latest.customer_name,
-        latest.status
-      );
-
-      if (latest.status === 'preparing') {
-        setLiveAlertBanner(
-          '🔔 카운터에서 주문을 확인하고 음료 제조를 시작했습니다!'
-        );
-      } else if (latest.status === 'ready') {
-        setLiveAlertBanner(
-          '🎉 음료 제조가 완료되었습니다! 카운터에서 픽업해 주세요!'
-        );
-      } else if (latest.status === 'completed') {
-        setLiveAlertBanner('✅ 음료 전달 및 결제가 완료되었습니다. 감사합니다!');
-      } else if (latest.status === 'cancelled') {
-        setLiveAlertBanner('⚠️ 주문이 카운터에서 취소되었습니다.');
-      }
+  // 내 모든 주문들을 실시간 조회 및 상태 변경 감지 (어느 주문이든 상태 변경 시 즉시 알림)
+  const refreshMyTrackedOrders = useCallback(async () => {
+    const savedIds = loadSavedOrderIds();
+    if (savedIds.length === 0) {
+      setMyOrders([]);
+      return;
     }
-    prevStatusRef.current = latest.status;
+
+    const fetchedList = await Promise.all(
+      savedIds.map((id) => fetchOrderById(id))
+    );
+    const validOrders = fetchedList.filter((o): o is Order => o !== null);
+
+    for (const latest of validOrders) {
+      const prevStatus = prevStatusMapRef.current[latest.id];
+      if (prevStatus && prevStatus !== latest.status) {
+        triggerCustomerPhoneAlert(
+          latest.order_number,
+          latest.customer_name,
+          latest.status
+        );
+
+        if (latest.status === 'preparing') {
+          setLiveAlertBanner(
+            `🔔 [주문 #${latest.order_number}] 카운터에서 주문을 확인하고 음료 제조를 시작했습니다!`
+          );
+        } else if (latest.status === 'ready') {
+          setLiveAlertBanner(
+            `🎉 [주문 #${latest.order_number}] 음료 제조가 완료되었습니다! 카운터에서 픽업해 주세요!`
+          );
+          setSelectedOrderId(latest.id);
+        } else if (latest.status === 'completed') {
+          setLiveAlertBanner(
+            `✅ [주문 #${latest.order_number}] 음료 전달 및 결제가 완료되었습니다. 감사합니다!`
+          );
+        } else if (latest.status === 'cancelled') {
+          setLiveAlertBanner(
+            `⚠️ [주문 #${latest.order_number}] 주문이 카운터에서 취소되었습니다.`
+          );
+        }
+      }
+      prevStatusMapRef.current[latest.id] = latest.status;
+    }
+
+    setMyOrders(validOrders);
   }, []);
 
   useEffect(() => {
@@ -132,16 +187,17 @@ export default function GuestOrderPage() {
       setNotifPermission(Notification.permission);
     }
 
-    // 새로고침 시에도 직전 주문 추적 유지
-    const savedOrderId =
-      typeof window !== 'undefined'
-        ? localStorage.getItem(ACTIVE_ORDER_STORAGE_KEY)
-        : null;
-    if (savedOrderId) {
-      fetchOrderById(savedOrderId).then((found) => {
-        if (found) {
-          prevStatusRef.current = found.status;
-          setCompletedOrder(found);
+    // 새로고침 시에도 내가 주문한 모든 내역 복원
+    const savedIds = loadSavedOrderIds();
+    if (savedIds.length > 0) {
+      Promise.all(savedIds.map((id) => fetchOrderById(id))).then((list) => {
+        const valid = list.filter((o): o is Order => o !== null);
+        valid.forEach((o) => {
+          prevStatusMapRef.current[o.id] = o.status;
+        });
+        setMyOrders(valid);
+        if (valid.length > 0) {
+          setSelectedOrderId(valid[valid.length - 1].id);
         }
       });
     }
@@ -151,12 +207,10 @@ export default function GuestOrderPage() {
     loadMenus();
     const unsubscribe = subscribeCafeRealtime(() => {
       loadMenus();
-      if (completedOrder?.id) {
-        refreshTrackedOrder(completedOrder.id);
-      }
+      refreshMyTrackedOrders();
     });
     return () => unsubscribe();
-  }, [loadMenus, completedOrder?.id, refreshTrackedOrder]);
+  }, [loadMenus, refreshMyTrackedOrders]);
 
   // 장바구니 품절 메뉴 자동 정리
   useEffect(() => {
@@ -274,12 +328,16 @@ export default function GuestOrderPage() {
           unit_price: c.menu.price,
         })),
       });
-      prevStatusRef.current = created.status;
-      setCompletedOrder(created);
+      prevStatusMapRef.current[created.id] = created.status;
+      const updatedOrders = [
+        ...myOrders.filter((o) => o.id !== created.id),
+        created,
+      ];
+      setMyOrders(updatedOrders);
+      setSelectedOrderId(created.id);
+      setIsViewingMenu(false);
       setLiveAlertBanner(null);
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(ACTIVE_ORDER_STORAGE_KEY, created.id);
-      }
+      saveOrderIdsToStorage(updatedOrders.map((o) => o.id));
       setCart([]);
       setIsCheckoutOpen(false);
       await loadMenus();
@@ -366,6 +424,68 @@ export default function GuestOrderPage() {
     return (
       <div className="mx-auto flex min-h-screen max-w-md flex-col justify-between bg-white p-5 shadow-lg">
         <div className="space-y-5 pt-2">
+          {/* 내 주문 목록 전환 바 (여러 개 주문했거나 추가 주문하러 갈 때 언제든 전환 가능) */}
+          <div className="rounded-2xl border border-slate-200 bg-slate-100 p-2.5">
+            <div className="mb-1.5 flex items-center justify-between px-1">
+              <span className="text-[11px] font-extrabold text-slate-600">
+                📱 내 스마트폰 주문 내역 ({myOrders.length}건)
+              </span>
+              <button
+                type="button"
+                onClick={() => setIsViewingMenu(true)}
+                className="inline-flex items-center gap-1 rounded-lg bg-amber-500 px-2.5 py-1 text-[11px] font-black text-slate-950 shadow-2xs hover:bg-amber-400"
+              >
+                <Plus className="h-3 w-3" />
+                일행·추가 주문하기
+              </button>
+            </div>
+
+            <div className="flex gap-1.5 overflow-x-auto pb-0.5">
+              {myOrders.map((ord) => {
+                const isSelected = ord.id === completedOrder.id;
+                const statusBadge =
+                  ord.status === 'ready'
+                    ? '픽업완료대기 🎉'
+                    : ord.status === 'preparing'
+                      ? '제조중 🔥'
+                      : ord.status === 'pending'
+                        ? '접수됨 ☕'
+                        : ord.status === 'completed'
+                          ? '수령완료 ✓'
+                          : '취소됨';
+                return (
+                  <button
+                    key={ord.id}
+                    type="button"
+                    onClick={() => setSelectedOrderId(ord.id)}
+                    className={`flex shrink-0 items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-black transition ${
+                      isSelected
+                        ? ord.status === 'ready'
+                          ? 'bg-emerald-600 text-white shadow-xs ring-2 ring-emerald-300'
+                          : 'bg-slate-900 text-white shadow-xs'
+                        : 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                    }`}
+                  >
+                    <span>#{ord.order_number}</span>
+                    <span
+                      className={`rounded-md px-1.5 py-0.5 text-[10px] font-extrabold ${
+                        isSelected
+                          ? 'bg-white/20 text-white'
+                          : ord.status === 'ready'
+                            ? 'bg-emerald-100 text-emerald-800'
+                            : ord.status === 'preparing'
+                              ? 'bg-amber-100 text-amber-900'
+                              : 'bg-slate-100 text-slate-600'
+                      }`}
+                    >
+                      {statusBadge}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           {/* 실시간 상태 변경 알림 팝업 배너 */}
           {liveAlertBanner && (
             <div
@@ -748,21 +868,38 @@ export default function GuestOrderPage() {
           </div>
         </div>
 
-        <div className="pt-5">
+        <div className="space-y-2.5 pt-5">
+          {/* 기존 주문을 유지한 채 메뉴판으로 가서 추가 주문하기 */}
           <button
             type="button"
             onClick={() => {
-              if (typeof window !== 'undefined') {
-                localStorage.removeItem(ACTIVE_ORDER_STORAGE_KEY);
-              }
-              setCompletedOrder(null);
-              setLiveAlertBanner(null);
-              setCustomerName('');
-              setPhone('010-');
+              setIsViewingMenu(true);
             }}
-            className="w-full rounded-2xl border border-slate-300 bg-white py-4 text-sm font-extrabold text-slate-700 hover:bg-slate-100"
+            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-900 py-4 text-sm font-black text-white shadow-md transition hover:bg-slate-800"
           >
-            새 주문하기 (메뉴판으로 돌아가기)
+            <Plus className="h-4 w-4 text-amber-400" />
+            일행 · 추가 주문하러 가기 (현재 주문 알림 유지됨)
+          </button>
+
+          {/* 현재 보고 있는 주문만 내 폰 목록에서 닫기 */}
+          <button
+            type="button"
+            onClick={() => {
+              const remaining = myOrders.filter(
+                (o) => o.id !== completedOrder.id
+              );
+              setMyOrders(remaining);
+              saveOrderIdsToStorage(remaining.map((o) => o.id));
+              if (remaining.length > 0) {
+                setSelectedOrderId(remaining[remaining.length - 1].id);
+              } else {
+                setSelectedOrderId(null);
+                setLiveAlertBanner(null);
+              }
+            }}
+            className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-3 text-xs font-bold text-slate-500 hover:bg-slate-100"
+          >
+            이 주문(#{completedOrder.order_number}) 확인창 닫기
           </button>
         </div>
       </div>
@@ -774,6 +911,28 @@ export default function GuestOrderPage() {
   // ==========================================================================
   return (
     <div className="mx-auto flex min-h-screen max-w-md flex-col bg-slate-50 pb-28 shadow-lg">
+      {/* 진행 중인 내 주문이 있을 때 언제든 다시 대기 화면으로 돌아갈 수 있는 상단 고정 바 */}
+      {myOrders.length > 0 && (
+        <div className="sticky top-0 z-30 bg-slate-900 px-4 py-2.5 text-white shadow-md">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 overflow-hidden">
+              <span className="flex h-2.5 w-2.5 shrink-0 rounded-full bg-emerald-400 animate-ping" />
+              <span className="truncate text-xs font-extrabold">
+                내 주문 {myOrders.length}건 진행 중 (
+                {myOrders.map((o) => `#${o.order_number}`).join(', ')})
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsViewingMenu(false)}
+              className="shrink-0 rounded-xl bg-amber-500 px-3 py-1.5 text-xs font-black text-slate-950 shadow-2xs hover:bg-amber-400"
+            >
+              내 주문 현황 보기 →
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* 상단 헤더 */}
       <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/95 backdrop-blur-xs">
         <div className="flex items-center justify-between px-4 py-3.5">

@@ -43,7 +43,7 @@ export default function HomePage() {
                 {cafeSettings.cafe_name} 주문 & POS 시스템
               </h1>
               <p className="text-xs text-slate-500">
-                선(先) 제조 · 픽업 시 결제/입금 확인 프로세스 최적화 MVP
+                모바일 QR 주문 · 카운터 태블릿 POS · 일일 정산 통합 시스템
               </p>
             </div>
           </div>
@@ -52,12 +52,12 @@ export default function HomePage() {
             {isSupabaseConfigured ? (
               <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3.5 py-1.5 text-xs font-extrabold text-emerald-800">
                 <Wifi className="h-3.5 w-3.5 text-emerald-600" />
-                Supabase Realtime 연동됨
+                실시간 주문 연결됨
               </span>
             ) : (
               <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3.5 py-1.5 text-xs font-extrabold text-amber-900">
                 <Database className="h-3.5 w-3.5 text-amber-600" />
-                로컬 실시간 데모 모드 (브라우저 탭 간 자동 동기화)
+                기기 내부 테스트 모드
               </span>
             )}
           </div>

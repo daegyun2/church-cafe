@@ -76,6 +76,10 @@ export default function CounterPosPage() {
   const [queueTab, setQueueTab] = useState<'active' | 'completed' | 'cancelled'>(
     'active'
   );
+  // 주문 카드 크기 조절 ('compact': 작게 모아보기 | 'normal': 보통 | 'large': 크게 확대)
+  const [cardScale, setCardScale] = useState<'compact' | 'normal' | 'large'>(
+    'normal'
+  );
 
   // 모달 상태
   const [editingOrder, setEditingOrder] = useState<Order | null>(null);
@@ -83,6 +87,26 @@ export default function CounterPosPage() {
   const [manageModalTab, setManageModalTab] = useState<
     'menus' | 'settings' | null
   >(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedScale = localStorage.getItem('church_cafe_pos_card_scale');
+      if (
+        savedScale === 'compact' ||
+        savedScale === 'normal' ||
+        savedScale === 'large'
+      ) {
+        setCardScale(savedScale);
+      }
+    }
+  }, []);
+
+  const handleChangeCardScale = (scale: 'compact' | 'normal' | 'large') => {
+    setCardScale(scale);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('church_cafe_pos_card_scale', scale);
+    }
+  };
 
   const loadAllData = useCallback(async () => {
     const [settingsData, menuList, todayOrders] = await Promise.all([
@@ -234,7 +258,7 @@ export default function CounterPosPage() {
 
           <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-800 px-3 py-1 text-xs font-bold text-emerald-400">
             <Wifi className="h-3.5 w-3.5" />
-            {isSupabaseConfigured ? 'Supabase Realtime' : '실시간 로컬 동기화'}
+            {isSupabaseConfigured ? '실시간 주문 연결됨' : '기기 내부 모드'}
           </span>
 
           <span className="hidden text-xs text-slate-400 xl:inline">
@@ -572,8 +596,8 @@ export default function CounterPosPage() {
             [우측 영역 - 7 cols] 실시간 주문 대기열 & 손님 알림 전송
         ================================================================== */}
         <section className="flex flex-col overflow-hidden bg-slate-100 lg:col-span-7">
-          <div className="flex items-center justify-between border-b border-slate-200 bg-white px-5 py-3">
-            <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 bg-white px-5 py-3">
+            <div className="flex flex-wrap items-center gap-2">
               <button
                 type="button"
                 onClick={() => setQueueTab('active')}
@@ -617,18 +641,47 @@ export default function CounterPosPage() {
               </button>
             </div>
 
-            <div className="text-right text-xs font-bold text-slate-500">
-              오늘 누적 완료:{' '}
-              <strong className="text-emerald-700">
-                {formatCurrency(
-                  completedOrders.reduce((s, o) => s + o.total_amount, 0)
-                )}
-              </strong>
+            <div className="flex items-center gap-3">
+              {/* 주문 카드 크기 조절 스위치 */}
+              <div className="flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-100 p-1">
+                <span className="px-1.5 text-[11px] font-extrabold text-slate-500">
+                  카드 크기
+                </span>
+                {(
+                  [
+                    { key: 'compact', label: '작게' },
+                    { key: 'normal', label: '보통' },
+                    { key: 'large', label: '크게' },
+                  ] as const
+                ).map((opt) => (
+                  <button
+                    key={opt.key}
+                    type="button"
+                    onClick={() => handleChangeCardScale(opt.key)}
+                    className={`rounded-lg px-2.5 py-1 text-xs font-black transition ${
+                      cardScale === opt.key
+                        ? 'bg-slate-900 text-amber-400 shadow-2xs'
+                        : 'text-slate-600 hover:bg-white'
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+
+              <div className="hidden text-right text-xs font-bold text-slate-500 sm:block">
+                오늘 누적 완료:{' '}
+                <strong className="text-emerald-700">
+                  {formatCurrency(
+                    completedOrders.reduce((s, o) => s + o.total_amount, 0)
+                  )}
+                </strong>
+              </div>
             </div>
           </div>
 
           {/* 대기열 카드 리스트 */}
-          <div className="flex-1 overflow-y-auto p-5">
+          <div className="flex-1 overflow-y-auto p-4">
             {displayedOrders.length === 0 ? (
               <div className="flex h-full flex-col items-center justify-center rounded-3xl border-2 border-dashed border-slate-300 bg-white/60 p-12 text-center">
                 <Coffee className="h-12 w-12 text-slate-300" />
@@ -644,7 +697,15 @@ export default function CounterPosPage() {
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+              <div
+                className={`grid ${
+                  cardScale === 'compact'
+                    ? 'grid-cols-1 gap-2.5 md:grid-cols-2 2xl:grid-cols-3'
+                    : cardScale === 'large'
+                      ? 'grid-cols-1 gap-5'
+                      : 'grid-cols-1 gap-4 xl:grid-cols-2'
+                }`}
+              >
                 {displayedOrders.map((order) => {
                   const totalCups = order.items.reduce(
                     (sum, i) => sum + i.quantity,
@@ -665,7 +726,13 @@ export default function CounterPosPage() {
                   return (
                     <div
                       key={order.id}
-                      className={`flex flex-col justify-between rounded-2xl border-2 bg-white p-5 shadow-md transition ${
+                      className={`flex flex-col justify-between rounded-2xl border-2 bg-white shadow-md transition ${
+                        cardScale === 'compact'
+                          ? 'p-3'
+                          : cardScale === 'large'
+                            ? 'p-6'
+                            : 'p-5'
+                      } ${
                         order.status === 'ready'
                           ? 'border-emerald-500 ring-2 ring-emerald-200'
                           : order.status === 'preparing'
@@ -678,14 +745,34 @@ export default function CounterPosPage() {
                       }`}
                     >
                       <div>
-                        <div className="flex items-start justify-between gap-2 border-b border-slate-200 pb-3.5">
+                        <div
+                          className={`flex items-start justify-between gap-2 border-b border-slate-200 ${
+                            cardScale === 'compact'
+                              ? 'pb-2'
+                              : cardScale === 'large'
+                                ? 'pb-4'
+                                : 'pb-3.5'
+                          }`}
+                        >
                           <div>
                             <div className="flex flex-wrap items-center gap-1.5">
-                              <span className="rounded-lg bg-slate-900 px-2.5 py-1 text-xs font-black text-amber-400">
+                              <span
+                                className={`rounded-lg bg-slate-900 font-black text-amber-400 ${
+                                  cardScale === 'compact'
+                                    ? 'px-2 py-0.5 text-[11px]'
+                                    : cardScale === 'large'
+                                      ? 'px-3 py-1 text-base'
+                                      : 'px-2.5 py-1 text-xs'
+                                }`}
+                              >
                                 #{order.order_number}
                               </span>
                               <span
-                                className={`rounded-md px-2 py-0.5 text-[11px] font-extrabold ${
+                                className={`rounded-md font-extrabold ${
+                                  cardScale === 'large'
+                                    ? 'px-2.5 py-1 text-xs'
+                                    : 'px-2 py-0.5 text-[11px]'
+                                } ${
                                   order.status === 'pending'
                                     ? 'bg-slate-200 text-slate-800'
                                     : order.status === 'preparing'
@@ -708,11 +795,27 @@ export default function CounterPosPage() {
                             </div>
 
                             {/* 주문자 이름 + 전체 휴대폰 번호 */}
-                            <h3 className="mt-2 text-lg font-black text-slate-900">
+                            <h3
+                              className={`font-black text-slate-900 ${
+                                cardScale === 'compact'
+                                  ? 'mt-1 text-sm'
+                                  : cardScale === 'large'
+                                    ? 'mt-2.5 text-2xl'
+                                    : 'mt-2 text-lg'
+                              }`}
+                            >
                               {order.customer_name}
                             </h3>
                             <div className="mt-0.5 flex items-center gap-2">
-                              <span className="font-mono text-sm font-extrabold text-amber-700">
+                              <span
+                                className={`font-mono font-extrabold text-amber-700 ${
+                                  cardScale === 'compact'
+                                    ? 'text-xs'
+                                    : cardScale === 'large'
+                                      ? 'text-base'
+                                      : 'text-sm'
+                                }`}
+                              >
                                 {order.phone}
                               </span>
                             </div>
@@ -720,7 +823,13 @@ export default function CounterPosPage() {
 
                           <div className="text-right">
                             <span
-                              className={`inline-block rounded-full px-3 py-1 text-xs font-black ${
+                              className={`inline-block rounded-full font-black ${
+                                cardScale === 'compact'
+                                  ? 'px-2 py-0.5 text-[10px]'
+                                  : cardScale === 'large'
+                                    ? 'px-3.5 py-1 text-sm'
+                                    : 'px-3 py-1 text-xs'
+                              } ${
                                 order.payment_method === 'transfer'
                                   ? 'bg-blue-100 text-blue-800 ring-1 ring-blue-300'
                                   : 'bg-emerald-100 text-emerald-800 ring-1 ring-emerald-300'
@@ -730,28 +839,64 @@ export default function CounterPosPage() {
                                 ? '계좌이체'
                                 : '현금결제'}
                             </span>
-                            <p className="mt-1.5 text-xl font-black text-slate-900">
+                            <p
+                              className={`font-black text-slate-900 ${
+                                cardScale === 'compact'
+                                  ? 'mt-1 text-base'
+                                  : cardScale === 'large'
+                                    ? 'mt-2 text-2xl'
+                                    : 'mt-1.5 text-xl'
+                              }`}
+                            >
                               {formatCurrency(order.total_amount)}
                             </p>
                           </div>
                         </div>
 
                         {/* 제조할 메뉴 및 수량 */}
-                        <div className="my-3.5 space-y-2">
+                        <div
+                          className={
+                            cardScale === 'compact'
+                              ? 'my-2 space-y-1'
+                              : cardScale === 'large'
+                                ? 'my-4 space-y-2.5'
+                                : 'my-3.5 space-y-2'
+                          }
+                        >
                           <div className="flex items-center justify-between text-xs font-bold text-slate-400">
                             <span>제조 메뉴 목록</span>
                             <span>총 {totalCups}잔/개</span>
                           </div>
-                          <ul className="space-y-1.5">
+                          <ul
+                            className={
+                              cardScale === 'compact'
+                                ? 'space-y-1'
+                                : cardScale === 'large'
+                                  ? 'space-y-2'
+                                  : 'space-y-1.5'
+                            }
+                          >
                             {order.items.map((item) => (
                               <li
                                 key={item.id}
-                                className="flex items-center justify-between rounded-xl bg-slate-50 px-3.5 py-2.5"
+                                className={`flex items-center justify-between rounded-xl bg-slate-50 ${
+                                  cardScale === 'compact'
+                                    ? 'px-2.5 py-1.5'
+                                    : cardScale === 'large'
+                                      ? 'px-4 py-3.5'
+                                      : 'px-3.5 py-2.5'
+                                }`}
                               >
                                 <div className="flex items-center gap-2">
                                   {item.temp_option !== 'NONE' && (
                                     <span
-                                      className={`inline-flex items-center gap-0.5 rounded-lg px-2 py-0.5 text-xs font-black ${
+                                      className={`inline-flex items-center gap-0.5 rounded-lg font-black ${
+                                        cardScale === 'compact'
+                                          ? 'px-1.5 py-0.5 text-[10px]'
+                                          : cardScale === 'large'
+                                            ? 'px-2.5 py-1 text-sm'
+                                            : 'px-2 py-0.5 text-xs'
+                                      } ${
                                         item.temp_option === 'HOT'
                                           ? 'bg-rose-600 text-white'
                                           : 'bg-sky-600 text-white'
@@ -760,11 +905,27 @@ export default function CounterPosPage() {
                                       {item.temp_option}
                                     </span>
                                   )}
-                                  <span className="text-base font-extrabold text-slate-900">
+                                  <span
+                                    className={`font-extrabold text-slate-900 ${
+                                      cardScale === 'compact'
+                                        ? 'text-xs'
+                                        : cardScale === 'large'
+                                          ? 'text-xl'
+                                          : 'text-base'
+                                    }`}
+                                  >
                                     {item.menu_name}
                                   </span>
                                 </div>
-                                <span className="rounded-lg bg-white px-2.5 py-1 text-base font-black text-slate-900 shadow-2xs ring-1 ring-slate-200">
+                                <span
+                                  className={`rounded-lg bg-white font-black text-slate-900 shadow-2xs ring-1 ring-slate-200 ${
+                                    cardScale === 'compact'
+                                      ? 'px-2 py-0.5 text-xs'
+                                      : cardScale === 'large'
+                                        ? 'px-3.5 py-1.5 text-xl'
+                                        : 'px-2.5 py-1 text-base'
+                                  }`}
+                                >
                                   {item.quantity}개
                                 </span>
                               </li>
@@ -775,39 +936,59 @@ export default function CounterPosPage() {
 
                       {/* 카드 하단 액션 버튼 영역 */}
                       {isActive ? (
-                        <div className="mt-2 space-y-2 border-t border-slate-100 pt-3">
+                        <div
+                          className={`border-t border-slate-100 ${
+                            cardScale === 'compact'
+                              ? 'mt-1.5 space-y-1.5 pt-2'
+                              : cardScale === 'large'
+                                ? 'mt-3 space-y-2.5 pt-4'
+                                : 'mt-2 space-y-2 pt-3'
+                          }`}
+                        >
                           {/* 손님 스마트폰 실시간 상태 신호 발송 버튼 (수신확인/제조중 & 제조완료/픽업호출) */}
-                          <div className="grid grid-cols-2 gap-2">
+                          <div className="grid grid-cols-2 gap-1.5">
                             <button
                               type="button"
                               onClick={() =>
                                 updateOrderStatus(order.id, 'preparing')
                               }
-                              className={`flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-black transition ${
+                              className={`flex items-center justify-center gap-1 rounded-xl font-black transition ${
+                                cardScale === 'compact'
+                                  ? 'py-1.5 text-[11px]'
+                                  : cardScale === 'large'
+                                    ? 'py-3.5 text-sm'
+                                    : 'py-2.5 text-xs'
+                              } ${
                                 order.status === 'preparing'
                                   ? 'bg-amber-500 text-slate-950 ring-2 ring-amber-300'
                                   : 'border border-amber-400 bg-amber-50 text-amber-900 hover:bg-amber-100'
                               }`}
                             >
-                              <Play className="h-3.5 w-3.5" />
+                              <Play className="h-3.5 w-3.5 shrink-0" />
                               {order.status === 'preparing'
-                                ? '제조중 (알림발송됨)'
-                                : '1. 수신확인·제조중'}
+                                ? '제조중(발송됨)'
+                                : '1. 수신·제조중'}
                             </button>
 
                             <button
                               type="button"
                               onClick={() => updateOrderStatus(order.id, 'ready')}
-                              className={`flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-black transition ${
+                              className={`flex items-center justify-center gap-1 rounded-xl font-black transition ${
+                                cardScale === 'compact'
+                                  ? 'py-1.5 text-[11px]'
+                                  : cardScale === 'large'
+                                    ? 'py-3.5 text-sm'
+                                    : 'py-2.5 text-xs'
+                              } ${
                                 order.status === 'ready'
                                   ? 'bg-blue-600 text-white ring-2 ring-blue-300'
                                   : 'border border-blue-400 bg-blue-50 text-blue-800 hover:bg-blue-100'
                               }`}
                             >
-                              <BellRing className="h-3.5 w-3.5" />
+                              <BellRing className="h-3.5 w-3.5 shrink-0" />
                               {order.status === 'ready'
-                                ? '호출됨 (재호출)'
-                                : '2. 제조완료·호출'}
+                                ? '호출됨(재호출)'
+                                : '2. 완료·호출'}
                             </button>
                           </div>
 
@@ -817,28 +998,46 @@ export default function CounterPosPage() {
                             onClick={() =>
                               updateOrderStatus(order.id, 'completed')
                             }
-                            className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 py-3.5 text-base font-black text-white shadow-md transition hover:bg-emerald-700 active:scale-[0.99]"
+                            className={`flex w-full items-center justify-center gap-1.5 rounded-xl bg-emerald-600 font-black text-white shadow-md transition hover:bg-emerald-700 active:scale-[0.99] ${
+                              cardScale === 'compact'
+                                ? 'py-2 text-xs'
+                                : cardScale === 'large'
+                                  ? 'py-4 text-lg'
+                                  : 'py-3.5 text-base'
+                            }`}
                           >
-                            <CheckCircle2 className="h-5 w-5" />
+                            <CheckCircle2 className="h-4 w-4" />
                             전달 및 결제완료
                           </button>
 
                           {/* 예외 처리: [수정] / [취소] 버튼 */}
-                          <div className="grid grid-cols-2 gap-2">
+                          <div className="grid grid-cols-2 gap-1.5">
                             <button
                               type="button"
                               onClick={() => setEditingOrder(order)}
-                              className="flex items-center justify-center gap-1.5 rounded-xl border border-slate-300 bg-white py-2 text-xs font-extrabold text-slate-700 hover:bg-slate-100"
+                              className={`flex items-center justify-center gap-1 rounded-xl border border-slate-300 bg-white font-extrabold text-slate-700 hover:bg-slate-100 ${
+                                cardScale === 'compact'
+                                  ? 'py-1 text-[11px]'
+                                  : cardScale === 'large'
+                                    ? 'py-2.5 text-sm'
+                                    : 'py-2 text-xs'
+                              }`}
                             >
-                              <Edit3 className="h-3.5 w-3.5 text-amber-600" />
+                              <Edit3 className="h-3 w-3 text-amber-600" />
                               주문 수정
                             </button>
                             <button
                               type="button"
                               onClick={() => setCancellingOrder(order)}
-                              className="flex items-center justify-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50 py-2 text-xs font-extrabold text-rose-700 hover:bg-rose-100"
+                              className={`flex items-center justify-center gap-1 rounded-xl border border-rose-200 bg-rose-50 font-extrabold text-rose-700 hover:bg-rose-100 ${
+                                cardScale === 'compact'
+                                  ? 'py-1 text-[11px]'
+                                  : cardScale === 'large'
+                                    ? 'py-2.5 text-sm'
+                                    : 'py-2 text-xs'
+                              }`}
                             >
-                              <XCircle className="h-3.5 w-3.5" />
+                              <XCircle className="h-3 w-3" />
                               주문 취소
                             </button>
                           </div>
