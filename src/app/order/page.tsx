@@ -103,6 +103,14 @@ export default function GuestOrderPage() {
   const [myOrders, setMyOrders] = useState<Order[]>([]);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [isViewingMenu, setIsViewingMenu] = useState<boolean>(false);
+  // 완료 후 5초가 지나 자동으로 대기 화면에서 닫힌 주문 ID 목록
+  const [dismissedFinishedIds, setDismissedFinishedIds] = useState<string[]>(
+    []
+  );
+  // 우측 상단 [내 주문내역] 영수증 리스트 & 상세 영수증 모달 상태
+  const [isHistoryOpen, setIsHistoryOpen] = useState<boolean>(false);
+  const [selectedReceiptOrder, setSelectedReceiptOrder] =
+    useState<Order | null>(null);
 
   const [activeQueueOrders, setActiveQueueOrders] = useState<Order[]>([]);
   const [copied, setCopied] = useState(false);
@@ -111,10 +119,19 @@ export default function GuestOrderPage() {
 
   const prevStatusMapRef = useRef<Record<string, OrderStatus>>({});
 
+  // 실시간 대기 화면에 띄울 대상: 진행 중(pending/preparing/ready)이거나, 방금 완료되어 아직 5초가 안 지난 주문만!
+  const liveTrackableOrders = myOrders.filter(
+    (o) =>
+      o.status === 'pending' ||
+      o.status === 'preparing' ||
+      o.status === 'ready' ||
+      !dismissedFinishedIds.includes(o.id)
+  );
+
   const completedOrder =
-    !isViewingMenu && myOrders.length > 0
-      ? myOrders.find((o) => o.id === selectedOrderId) ||
-        myOrders[myOrders.length - 1]
+    !isViewingMenu && liveTrackableOrders.length > 0
+      ? liveTrackableOrders.find((o) => o.id === selectedOrderId) ||
+        liveTrackableOrders[liveTrackableOrders.length - 1]
       : null;
 
   const loadMenus = useCallback(async () => {
@@ -162,17 +179,27 @@ export default function GuestOrderPage() {
           setLiveAlertBanner(
             `🔄 [주문 #${latest.order_number}] 카운터에서 주문이 대기열로 다시 복구되었습니다!`
           );
+          setDismissedFinishedIds((prev) =>
+            prev.filter((id) => id !== latest.id)
+          );
           setSelectedOrderId(latest.id);
           setIsViewingMenu(false);
+          setIsHistoryOpen(false);
         } else if (latest.status === 'preparing') {
           setLiveAlertBanner(
             `🔔 [주문 #${latest.order_number}] 카운터에서 주문을 확인하고 음료 제조를 시작했습니다!`
+          );
+          setDismissedFinishedIds((prev) =>
+            prev.filter((id) => id !== latest.id)
           );
           setSelectedOrderId(latest.id);
           setIsViewingMenu(false);
         } else if (latest.status === 'ready') {
           setLiveAlertBanner(
             `🎉 [주문 #${latest.order_number}] 음료 제조가 완료되었습니다! 카운터에서 픽업해 주세요!`
+          );
+          setDismissedFinishedIds((prev) =>
+            prev.filter((id) => id !== latest.id)
           );
           setSelectedOrderId(latest.id);
           setIsViewingMenu(false);
@@ -214,7 +241,7 @@ export default function GuestOrderPage() {
       }
     }
 
-    // 새로고침 시 오늘 내가 주문한 내역 복원 (전달완료된 주문도 지우지 않고 보관하되, 진행 중 주문이 없을 때만 메뉴판부터 표시)
+    // 새로고침 시 오늘 내가 주문한 내역 복원 (이미 완료된 주문은 대기 화면에 안 띄우고 [내 주문내역]에서만 조회 가능)
     const savedIds = loadSavedOrderIds();
     if (savedIds.length > 0) {
       Promise.all(savedIds.map((id) => fetchOrderById(id))).then((list) => {
@@ -230,21 +257,25 @@ export default function GuestOrderPage() {
         saveOrderIdsToStorage(validToday.map((o) => o.id));
         setMyOrders(validToday);
 
+        const alreadyFinishedIds = validToday
+          .filter((o) => o.status === 'completed' || o.status === 'cancelled')
+          .map((o) => o.id);
+        setDismissedFinishedIds(alreadyFinishedIds);
+
         const activeOnes = validToday.filter(
           (o) => o.status !== 'completed' && o.status !== 'cancelled'
         );
         if (activeOnes.length > 0) {
           setSelectedOrderId(activeOnes[activeOnes.length - 1].id);
           setIsViewingMenu(false);
-        } else if (validToday.length > 0) {
-          setSelectedOrderId(validToday[validToday.length - 1].id);
+        } else {
           setIsViewingMenu(true);
         }
       });
     }
   }, []);
 
-  // 현재 보고 있는 주문이 전달 완료(completed) 또는 취소(cancelled)되면, 주문 ID는 삭제하지 않고 5초 뒤 자동으로 메뉴판(또는 남은 진행중 주문)으로 화면만 전환
+  // 현재 대기 화면에서 보고 있는 주문이 전달 완료(completed) 또는 취소(cancelled)되면 5초 뒤 대기 화면에서 자동 닫기
   useEffect(() => {
     if (isViewingMenu || !completedOrder) return;
     if (
@@ -254,12 +285,19 @@ export default function GuestOrderPage() {
       return;
     }
 
+    const finishedId = completedOrder.id;
     const timer = setTimeout(() => {
-      const activeOnes = myOrders.filter(
-        (o) => o.status !== 'completed' && o.status !== 'cancelled'
+      setDismissedFinishedIds((prev) =>
+        prev.includes(finishedId) ? prev : [...prev, finishedId]
       );
-      if (activeOnes.length > 0) {
-        setSelectedOrderId(activeOnes[activeOnes.length - 1].id);
+      const remainingActive = myOrders.filter(
+        (o) =>
+          o.id !== finishedId &&
+          o.status !== 'completed' &&
+          o.status !== 'cancelled'
+      );
+      if (remainingActive.length > 0) {
+        setSelectedOrderId(remainingActive[remainingActive.length - 1].id);
       } else {
         setIsViewingMenu(true);
         setLiveAlertBanner(null);
@@ -485,11 +523,11 @@ export default function GuestOrderPage() {
     return (
       <div className="mx-auto flex min-h-screen max-w-md flex-col justify-between bg-white p-5 shadow-lg">
         <div className="space-y-4 pt-1">
-          {/* 내 주문 목록 전환 바 */}
+          {/* 진행 중 내 주문 목록 전환 바 */}
           <div className="rounded-2xl border border-slate-200 bg-slate-100 p-2.5">
             <div className="mb-1.5 flex items-center justify-between px-1">
               <span className="text-[11px] font-extrabold text-slate-600">
-                내 주문 ({myOrders.length}건)
+                진행 중 주문 ({liveTrackableOrders.length}건)
               </span>
               <button
                 type="button"
@@ -502,7 +540,7 @@ export default function GuestOrderPage() {
             </div>
 
             <div className="flex gap-1.5 overflow-x-auto pb-0.5">
-              {myOrders.map((ord) => {
+              {liveTrackableOrders.map((ord) => {
                 const isSelected = ord.id === completedOrder.id;
                 const statusBadge =
                   ord.status === 'ready'
@@ -908,15 +946,13 @@ export default function GuestOrderPage() {
             </h1>
           </div>
 
-          {/* 오늘 내가 주문한 내역(완료된 주문 포함) 언제든 다시 열기 버튼 */}
+          {/* 오늘 내가 주문한 내역(영수증 리스트) 열기 버튼 */}
           {myOrders.length > 0 && (
             <button
               type="button"
               onClick={() => {
-                if (!selectedOrderId && myOrders.length > 0) {
-                  setSelectedOrderId(myOrders[myOrders.length - 1].id);
-                }
-                setIsViewingMenu(false);
+                setSelectedReceiptOrder(null);
+                setIsHistoryOpen(true);
               }}
               className="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-100 px-3 py-1.5 text-xs font-extrabold text-slate-700 hover:bg-slate-200"
             >
@@ -1435,6 +1471,207 @@ export default function GuestOrderPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* 내 주문 내역 (과거 주문 리스트 & 영수증 보기 모달 - 5초 자동 닫힘 없음) */}
+      {isHistoryOpen && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-xs sm:items-center">
+          <div className="flex max-h-[88vh] w-full max-w-md flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl sm:rounded-3xl">
+            <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+              <div className="flex items-center gap-2">
+                {selectedReceiptOrder && (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedReceiptOrder(null)}
+                    className="rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-black text-slate-700 hover:bg-slate-200"
+                  >
+                    ← 목록
+                  </button>
+                )}
+                <h2 className="text-base font-black text-slate-900">
+                  {selectedReceiptOrder
+                    ? `주문 #${selectedReceiptOrder.order_number} 영수증`
+                    : `내 주문 내역 (${myOrders.length}건)`}
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsHistoryOpen(false);
+                  setSelectedReceiptOrder(null);
+                }}
+                className="rounded-full bg-slate-100 p-1.5 text-slate-500 hover:bg-slate-200"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-5">
+              {selectedReceiptOrder ? (
+                /* 상세 영수증 화면 */
+                <div className="rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50/70 p-5">
+                  <div className="border-b border-dashed border-slate-300 pb-3.5 text-center">
+                    <p className="text-xs font-extrabold text-slate-500">
+                      {cafeSettings.cafe_name}
+                    </p>
+                    <p className="mt-1 font-mono text-2xl font-black text-slate-900">
+                      주문번호 #{selectedReceiptOrder.order_number}
+                    </p>
+                    <p className="mt-1 text-[11px] font-semibold text-slate-400">
+                      {new Date(selectedReceiptOrder.created_at).toLocaleString(
+                        'ko-KR',
+                        {
+                          month: '2-digit',
+                          day: '2-digit',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        }
+                      )}
+                    </p>
+                  </div>
+
+                  {/* 주문자 요약 */}
+                  <div className="space-y-1 border-b border-dashed border-slate-300 py-3 text-xs">
+                    <div className="flex justify-between">
+                      <span className="font-semibold text-slate-500">주문자</span>
+                      <span className="font-extrabold text-slate-800">
+                        {selectedReceiptOrder.customer_name} (
+                        {selectedReceiptOrder.phone})
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-semibold text-slate-500">
+                        결제방식
+                      </span>
+                      <span className="font-extrabold text-slate-800">
+                        {selectedReceiptOrder.payment_method === 'transfer'
+                          ? '계좌이체'
+                          : '현금결제'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* 품목 내역 */}
+                  <div className="divide-y divide-slate-200/70 py-2">
+                    {selectedReceiptOrder.items.map((item) => (
+                      <div
+                        key={item.id}
+                        className="flex items-center justify-between py-2.5 text-sm"
+                      >
+                        <div>
+                          <span className="font-extrabold text-slate-900">
+                            {item.menu_name}
+                          </span>
+                          {item.temp_option !== 'NONE' && (
+                            <span className="ml-1.5 rounded-md bg-slate-200 px-1.5 py-0.5 text-[10px] font-bold text-slate-700">
+                              {item.temp_option}
+                            </span>
+                          )}
+                          <span className="ml-1.5 text-xs font-bold text-slate-500">
+                            × {item.quantity}
+                          </span>
+                        </div>
+                        <span className="font-mono font-extrabold text-slate-900">
+                          {formatCurrency(item.subtotal)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* 합계 */}
+                  <div className="mt-2 flex items-center justify-between border-t-2 border-slate-900 pt-3.5">
+                    <span className="text-sm font-black text-slate-900">
+                      총 합계 (
+                      {selectedReceiptOrder.items.reduce(
+                        (s, i) => s + i.quantity,
+                        0
+                      )}
+                      개)
+                    </span>
+                    <span className="text-xl font-black text-amber-600">
+                      {formatCurrency(selectedReceiptOrder.total_amount)}
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                /* 과거 주문 기록 줄줄이 리스트 */
+                <div className="space-y-2.5">
+                  {myOrders
+                    .slice()
+                    .reverse()
+                    .map((ord) => {
+                      const totalCups = ord.items.reduce(
+                        (s, i) => s + i.quantity,
+                        0
+                      );
+                      const firstItemName =
+                        ord.items[0]?.menu_name || '주문 메뉴';
+                      const summaryTitle =
+                        ord.items.length > 1
+                          ? `${firstItemName} 외 ${ord.items.length - 1}건`
+                          : firstItemName;
+                      const timeStr = new Date(
+                        ord.created_at
+                      ).toLocaleTimeString('ko-KR', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      });
+
+                      return (
+                        <button
+                          key={ord.id}
+                          type="button"
+                          onClick={() => setSelectedReceiptOrder(ord)}
+                          className="flex w-full items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 p-4 text-left transition hover:border-slate-400 hover:bg-white"
+                        >
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="rounded-lg bg-slate-900 px-2 py-0.5 font-mono text-xs font-black text-amber-400">
+                                #{ord.order_number}
+                              </span>
+                              <span className="text-xs font-semibold text-slate-400">
+                                {timeStr}
+                              </span>
+                              <span
+                                className={`rounded-md px-1.5 py-0.5 text-[10px] font-extrabold ${
+                                  ord.status === 'completed'
+                                    ? 'bg-slate-200 text-slate-700'
+                                    : ord.status === 'cancelled'
+                                      ? 'bg-rose-100 text-rose-700'
+                                      : 'bg-emerald-100 text-emerald-800'
+                                }`}
+                              >
+                                {ord.status === 'completed'
+                                  ? '수령완료'
+                                  : ord.status === 'cancelled'
+                                    ? '취소됨'
+                                    : '진행중'}
+                              </span>
+                            </div>
+                            <p className="mt-1.5 truncate text-sm font-black text-slate-900">
+                              {summaryTitle}{' '}
+                              <span className="text-xs font-bold text-slate-500">
+                                (총 {totalCups}개)
+                              </span>
+                            </p>
+                          </div>
+
+                          <div className="ml-3 shrink-0 text-right">
+                            <p className="text-base font-black text-slate-900">
+                              {formatCurrency(ord.total_amount)}
+                            </p>
+                            <span className="text-[11px] font-bold text-amber-700">
+                              영수증 보기 →
+                            </span>
+                          </div>
+                        </button>
+                      );
+                    })}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
