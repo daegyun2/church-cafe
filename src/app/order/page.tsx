@@ -205,21 +205,51 @@ export default function GuestOrderPage() {
       }
     }
 
-    // 새로고침 시에도 내가 주문한 모든 내역 복원
+    // 새로고침 시 진행 중인(미완료) 내 주문 내역만 복원 (이미 전달완료/취소된 과거 주문은 자동 정리)
     const savedIds = loadSavedOrderIds();
     if (savedIds.length > 0) {
       Promise.all(savedIds.map((id) => fetchOrderById(id))).then((list) => {
-        const valid = list.filter((o): o is Order => o !== null);
-        valid.forEach((o) => {
+        const activeOnly = list.filter(
+          (o): o is Order =>
+            o !== null && o.status !== 'completed' && o.status !== 'cancelled'
+        );
+        activeOnly.forEach((o) => {
           prevStatusMapRef.current[o.id] = o.status;
         });
-        setMyOrders(valid);
-        if (valid.length > 0) {
-          setSelectedOrderId(valid[valid.length - 1].id);
+        saveOrderIdsToStorage(activeOnly.map((o) => o.id));
+        setMyOrders(activeOnly);
+        if (activeOnly.length > 0) {
+          setSelectedOrderId(activeOnly[activeOnly.length - 1].id);
         }
       });
     }
   }, []);
+
+  // 주문이 전달 완료(completed) 또는 취소(cancelled)되면 5초 뒤 자동으로 목록에서 정리하고 메인 메뉴판(또는 남은 주문)으로 전환
+  useEffect(() => {
+    const finishedOrders = myOrders.filter(
+      (o) => o.status === 'completed' || o.status === 'cancelled'
+    );
+    if (finishedOrders.length === 0) return;
+
+    const timer = setTimeout(() => {
+      setMyOrders((prev) => {
+        const remaining = prev.filter(
+          (o) => o.status !== 'completed' && o.status !== 'cancelled'
+        );
+        saveOrderIdsToStorage(remaining.map((o) => o.id));
+        if (remaining.length > 0) {
+          setSelectedOrderId(remaining[remaining.length - 1].id);
+        } else {
+          setSelectedOrderId(null);
+          setLiveAlertBanner(null);
+        }
+        return remaining;
+      });
+    }, 5000);
+
+    return () => clearTimeout(timer);
+  }, [myOrders]);
 
   useEffect(() => {
     loadMenus();
