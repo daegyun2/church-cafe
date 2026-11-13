@@ -52,6 +52,7 @@ import {
 
 const ACTIVE_ORDER_STORAGE_KEY = 'church_cafe_active_guest_order_id';
 const ACTIVE_ORDER_IDS_STORAGE_KEY = 'church_cafe_active_guest_order_ids';
+const GUEST_PROFILE_STORAGE_KEY = 'church_cafe_guest_profile';
 
 function loadSavedOrderIds(): string[] {
   if (typeof window === 'undefined') return [];
@@ -185,6 +186,23 @@ export default function GuestOrderPage() {
   useEffect(() => {
     if (typeof window !== 'undefined' && 'Notification' in window) {
       setNotifPermission(Notification.permission);
+    }
+
+    // 내 스마트폰에 저장된 주문자 이름 & 휴대폰 번호 자동 불러오기
+    if (typeof window !== 'undefined') {
+      try {
+        const savedProfile = localStorage.getItem(GUEST_PROFILE_STORAGE_KEY);
+        if (savedProfile) {
+          const parsed = JSON.parse(savedProfile) as {
+            name?: string;
+            phone?: string;
+          };
+          if (parsed.name) setCustomerName(parsed.name);
+          if (parsed.phone) setPhone(parsed.phone);
+        }
+      } catch {
+        // Ignore
+      }
     }
 
     // 새로고침 시에도 내가 주문한 모든 내역 복원
@@ -338,6 +356,15 @@ export default function GuestOrderPage() {
       setIsViewingMenu(false);
       setLiveAlertBanner(null);
       saveOrderIdsToStorage(updatedOrders.map((o) => o.id));
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(
+          GUEST_PROFILE_STORAGE_KEY,
+          JSON.stringify({
+            name: customerName.trim(),
+            phone: formatPhoneNumber(phone),
+          })
+        );
+      }
       setCart([]);
       setIsCheckoutOpen(false);
       await loadMenus();
