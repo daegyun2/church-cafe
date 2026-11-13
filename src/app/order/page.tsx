@@ -518,28 +518,28 @@ export default function GuestOrderPage() {
         : Math.max(18, Math.round((1 / (teamsAheadCount + 1)) * 90));
 
     return (
-      <div className="mx-auto flex min-h-screen max-w-md flex-col justify-between bg-slate-50 p-4 sm:p-5 shadow-lg">
-        <div className="space-y-4 pt-1">
+      <div className="mx-auto flex min-h-screen max-w-md flex-col justify-between bg-[#F2F4F6] p-4 sm:p-5 text-[#191F28]">
+        <div className="space-y-3.5 pt-1">
           {/* 내 주문 상태 리스트 (여러 건 주문했거나 일부가 완료/복구되었을 때도 모든 주문 상태를 한눈에 리스트로 확인) */}
-          <div className="rounded-3xl border border-slate-200 bg-white p-3.5 shadow-2xs">
-            <div className="mb-2.5 flex items-center justify-between px-1">
-              <div className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                <span className="text-xs font-black text-slate-800">
+          <div className="rounded-[26px] bg-white p-4 shadow-[0_4px_20px_rgba(0,0,0,0.04)]">
+            <div className="mb-3 flex items-center justify-between px-0.5">
+              <div className="flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-[#3182F6]" />
+                <span className="text-xs font-extrabold text-[#191F28]">
                   내 주문 상태 목록 ({myOrders.length}건)
                 </span>
               </div>
               <button
                 type="button"
                 onClick={() => setIsViewingMenu(true)}
-                className="inline-flex items-center gap-1 rounded-xl bg-amber-500 px-3 py-1.5 text-xs font-black text-slate-950 shadow-2xs transition hover:bg-amber-400"
+                className="inline-flex items-center gap-1 rounded-xl bg-[#E8F3FF] px-3 py-1.5 text-xs font-extrabold text-[#3182F6] transition hover:bg-[#D4E8FF]"
               >
                 <Plus className="h-3.5 w-3.5" />
                 추가 주문
               </button>
             </div>
 
-            <div className="max-h-48 space-y-1.5 overflow-y-auto pr-0.5">
+            <div className="max-h-48 space-y-2 overflow-y-auto pr-0.5">
               {myOrders
                 .slice()
                 .reverse()
@@ -556,26 +556,26 @@ export default function GuestOrderPage() {
                     ord.status === 'ready'
                       ? {
                           label: '제조완료 · 픽업대기 🎉',
-                          badgeClass: 'bg-emerald-600 text-white',
+                          badgeClass: 'bg-[#00C471] text-white',
                         }
                       : ord.status === 'preparing'
                         ? {
                             label: '제조 중 ☕',
-                            badgeClass: 'bg-amber-500 text-slate-950',
+                            badgeClass: 'bg-[#FFF8E6] text-[#D97706]',
                           }
                         : ord.status === 'pending'
                           ? {
                               label: '주문 접수',
-                              badgeClass: 'bg-slate-800 text-white',
+                              badgeClass: 'bg-[#E8F3FF] text-[#3182F6]',
                             }
                           : ord.status === 'completed'
                             ? {
                                 label: '전달 완료 ✓',
-                                badgeClass: 'bg-slate-200 text-slate-700',
+                                badgeClass: 'bg-[#F2F4F6] text-[#8B95A1]',
                               }
                             : {
                                 label: '주문 취소',
-                                badgeClass: 'bg-rose-100 text-rose-700',
+                                badgeClass: 'bg-[#FFEEEE] text-[#F04452]',
                               };
 
                   return (
@@ -588,49 +588,37 @@ export default function GuestOrderPage() {
                         );
                         setSelectedOrderId(ord.id);
                       }}
-                      className={`flex w-full items-center justify-between rounded-2xl border px-3.5 py-2.5 text-left transition ${
+                      className={`flex w-full items-center justify-between rounded-2xl border-2 px-3.5 py-2.5 text-left transition ${
                         isSelected
-                          ? 'border-slate-900 bg-slate-900 text-white shadow-xs'
-                          : 'border-slate-200/90 bg-slate-50/80 text-slate-800 hover:bg-slate-100'
+                          ? 'border-[#3182F6] bg-[#F4F8FF]'
+                          : 'border-transparent bg-[#F9FAFB] hover:bg-[#F2F4F6]'
                       }`}
                     >
                       <div className="flex min-w-0 items-center gap-2.5">
                         <span
                           className={`shrink-0 rounded-xl px-2.5 py-1 font-mono text-sm font-black ${
                             isSelected
-                              ? 'bg-amber-400 text-slate-950'
-                              : 'bg-white text-slate-900 shadow-2xs ring-1 ring-slate-200'
+                              ? 'bg-[#3182F6] text-white'
+                              : 'bg-white text-[#191F28] shadow-2xs'
                           }`}
                         >
                           #{ord.order_number}
                         </span>
                         <div className="min-w-0">
-                          <p
-                            className={`truncate text-xs font-extrabold ${
-                              isSelected ? 'text-white' : 'text-slate-900'
-                            }`}
-                          >
+                          <p className="truncate text-xs font-extrabold text-[#191F28]">
                             {menuSummary}{' '}
-                            <span
-                              className={
-                                isSelected ? 'text-slate-300' : 'text-slate-500'
-                              }
-                            >
+                            <span className="text-[#8B95A1]">
                               ({ordCups}잔)
                             </span>
                           </p>
-                          <p
-                            className={`text-[11px] font-bold ${
-                              isSelected ? 'text-amber-300' : 'text-slate-500'
-                            }`}
-                          >
+                          <p className="text-[11px] font-bold text-[#4E5968]">
                             {formatCurrency(ord.total_amount)}
                           </p>
                         </div>
                       </div>
 
                       <span
-                        className={`ml-2 shrink-0 rounded-xl px-2.5 py-1 text-[11px] font-black ${statusMeta.badgeClass}`}
+                        className={`ml-2 shrink-0 rounded-xl px-2.5 py-1 text-[11px] font-extrabold ${statusMeta.badgeClass}`}
                       >
                         {statusMeta.label}
                       </span>
@@ -643,14 +631,14 @@ export default function GuestOrderPage() {
           {/* 실시간 상태 변경 알림 팝업 배너 */}
           {liveAlertBanner && (
             <div
-              className={`flex items-center justify-between gap-2 rounded-2xl p-3.5 text-sm font-black shadow-lg transition-all ${
+              className={`flex items-center justify-between gap-2 rounded-2xl p-3.5 text-sm font-extrabold shadow-md transition-all ${
                 completedOrder.status === 'ready'
-                  ? 'animate-bounce bg-emerald-600 text-white'
+                  ? 'animate-bounce bg-[#00C471] text-white'
                   : completedOrder.status === 'preparing'
-                    ? 'bg-amber-500 text-slate-950'
+                    ? 'bg-[#3182F6] text-white'
                     : completedOrder.status === 'cancelled'
-                      ? 'bg-rose-600 text-white'
-                      : 'bg-slate-900 text-white'
+                      ? 'bg-[#F04452] text-white'
+                      : 'bg-[#191F28] text-white'
               }`}
             >
               <span>{liveAlertBanner}</span>
@@ -664,45 +652,45 @@ export default function GuestOrderPage() {
             </div>
           )}
 
-          {/* 대형 주문번호 & 현재 상태 메인 카드 */}
-          <div className="rounded-3xl border border-slate-200 bg-white p-5 text-center shadow-2xs">
-            <p className="text-xs font-extrabold uppercase tracking-widest text-slate-400">
-              ORDER NUMBER
+          {/* 대형 주문번호 & 현재 상태 메인 카드 (Toss 스타일) */}
+          <div className="rounded-[28px] bg-white p-6 text-center shadow-[0_4px_20px_rgba(0,0,0,0.04)]">
+            <p className="text-[11px] font-extrabold uppercase tracking-widest text-[#8B95A1]">
+              주문번호
             </p>
-            <div className="mt-1 inline-flex items-baseline justify-center gap-1 rounded-2xl bg-amber-50 px-5 py-2 ring-2 ring-amber-300/80">
-              <span className="text-2xl font-black text-amber-600">#</span>
-              <span className="font-mono text-5xl font-black tracking-tight text-slate-950">
+            <div className="mt-1.5 inline-flex items-baseline justify-center gap-1 rounded-3xl bg-[#E8F3FF] px-6 py-2.5">
+              <span className="text-2xl font-black text-[#3182F6]">#</span>
+              <span className="font-mono text-5xl font-black tracking-tight text-[#3182F6]">
                 {completedOrder.order_number}
               </span>
             </div>
 
-            <h1 className="mt-3 text-xl font-black text-slate-900">
-              {completedOrder.status === 'pending' && '주문이 접수되었습니다'}
+            <h1 className="mt-3.5 text-xl font-extrabold text-[#191F28]">
+              {completedOrder.status === 'pending' && '주문이 접수되었어요'}
               {completedOrder.status === 'preparing' &&
-                '음료를 제조하고 있습니다 ☕'}
+                '음료를 정성껏 만들고 있어요 ☕'}
               {completedOrder.status === 'ready' &&
-                '음료가 완성되었습니다! 픽업해 주세요 🎉'}
-              {completedOrder.status === 'completed' && '전달 완료되었습니다'}
-              {completedOrder.status === 'cancelled' && '주문이 취소되었습니다'}
+                '음료가 완성되었어요! 픽업해 주세요 🎉'}
+              {completedOrder.status === 'completed' && '음료 전달이 완료되었어요'}
+              {completedOrder.status === 'cancelled' && '주문이 취소되었어요'}
             </h1>
 
             {/* 심플 4단계 진행 바 */}
             {completedOrder.status !== 'cancelled' && (
-              <div className="mt-4 grid grid-cols-4 gap-1.5 rounded-2xl bg-slate-100 p-1.5">
+              <div className="mt-4 grid grid-cols-4 gap-1.5 rounded-2xl bg-[#F2F4F6] p-1.5">
                 {statusSteps.map((step, idx) => {
                   const isActive = idx === currentStepIdx;
                   const isDone = idx < currentStepIdx;
                   return (
                     <div
                       key={step.key}
-                      className={`flex items-center justify-center rounded-xl py-2.5 text-center text-xs font-black transition ${
+                      className={`flex items-center justify-center rounded-xl py-2.5 text-center text-xs font-extrabold transition ${
                         isActive
                           ? step.key === 'ready'
-                            ? 'bg-emerald-600 text-white shadow-xs'
-                            : 'bg-slate-900 text-white shadow-xs'
+                            ? 'bg-[#00C471] text-white shadow-xs'
+                            : 'bg-[#3182F6] text-white shadow-xs'
                           : isDone
-                            ? 'bg-emerald-100 text-emerald-900'
-                            : 'bg-white/70 text-slate-400'
+                            ? 'bg-white text-[#3182F6]'
+                            : 'text-[#8B95A1]'
                       }`}
                     >
                       {step.label}
@@ -713,45 +701,44 @@ export default function GuestOrderPage() {
             )}
           </div>
 
-          {/* 세련된 실시간 대기 순서 트래커 UI (접수 / 제조중일 때 표시) */}
+          {/* 세련된 실시간 대기 순서 트래커 UI (Toss 카드 톤) */}
           {isMyOrderWaiting && (
-            <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white p-4 shadow-2xs">
+            <div className="overflow-hidden rounded-[28px] bg-white p-5 shadow-[0_4px_20px_rgba(0,0,0,0.04)]">
               {/* 상단 요약 헤더 */}
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-100 text-amber-700">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#E8F3FF] text-[#3182F6]">
                     <Coffee className="h-5 w-5" />
                   </div>
                   <div>
-                    <p className="text-[11px] font-bold text-slate-400">
-                      실시간 내 순서 안내
+                    <p className="text-xs font-bold text-[#8B95A1]">
+                      실시간 내 순서
                     </p>
-                    <p className="text-sm font-black text-slate-900">
+                    <p className="mt-0.5 text-base font-extrabold text-[#191F28]">
                       {teamsAheadCount === 0 ? (
-                        <span className="text-emerald-600">
+                        <span className="text-[#00A859]">
                           내 앞 대기 없음 · 바로 제조 차례!
                         </span>
                       ) : (
                         <>
                           내 앞에{' '}
-                          <span className="text-amber-600">
+                          <span className="text-[#3182F6]">
                             {teamsAheadCount}팀
                           </span>{' '}
-                          <span className="text-slate-500">
-                            (총 {cupsAheadCount}잔)
-                          </span>{' '}
-                          대기 중
+                          <span className="text-sm font-bold text-[#8B95A1]">
+                            ({cupsAheadCount}잔)
+                          </span>
                         </>
                       )}
                     </p>
                   </div>
                 </div>
 
-                <div className="rounded-2xl bg-slate-900 px-3 py-1.5 text-right">
-                  <span className="block text-[10px] font-bold text-slate-400">
-                    내 대기 순번
+                <div className="rounded-2xl bg-[#F2F4F6] px-3.5 py-2 text-right">
+                  <span className="block text-[10px] font-bold text-[#8B95A1]">
+                    대기 순번
                   </span>
-                  <span className="text-xs font-black text-amber-400">
+                  <span className="text-xs font-extrabold text-[#3182F6]">
                     {teamsAheadCount === 0
                       ? '1번째 (내 차례)'
                       : `${teamsAheadCount + 1}번째 순서`}
@@ -760,25 +747,25 @@ export default function GuestOrderPage() {
               </div>
 
               {/* 진행 게이지 바 */}
-              <div className="mt-3.5 h-2 w-full overflow-hidden rounded-full bg-slate-100">
+              <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-[#F2F4F6]">
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-amber-500 to-emerald-500 transition-all duration-500"
+                  className="h-full rounded-full bg-gradient-to-r from-[#3182F6] to-[#00C471] transition-all duration-500"
                   style={{ width: `${queueProgressPercent}%` }}
                 />
               </div>
 
               {/* 연결형 타임라인 대기열 카드 트랙 */}
-              <div className="relative mt-3.5">
+              <div className="relative mt-4">
                 <div className="flex items-stretch gap-2 overflow-x-auto pb-1">
                   {/* 1. 카운터 제조 바 */}
-                  <div className="flex shrink-0 flex-col items-center justify-center rounded-2xl bg-slate-900 px-3 py-2.5 text-white">
-                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-amber-400/20 text-amber-400">
+                  <div className="flex shrink-0 flex-col items-center justify-center rounded-2xl bg-[#191F28] px-3.5 py-2.5 text-white">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#3182F6]/20 text-[#64A8FF]">
                       <Coffee className="h-3.5 w-3.5" />
                     </span>
-                    <span className="mt-1 text-[11px] font-black text-white">
+                    <span className="mt-1 text-[11px] font-extrabold text-white">
                       제조 바
                     </span>
-                    <span className="text-[9px] font-bold text-amber-300">
+                    <span className="text-[9px] font-bold text-[#8B95A1]">
                       카운터
                     </span>
                   </div>
@@ -794,25 +781,23 @@ export default function GuestOrderPage() {
                       return (
                         <div
                           key={aheadOrder.id}
-                          className={`flex shrink-0 flex-col items-center justify-between rounded-2xl border px-3 py-2 ${
-                            isPrep
-                              ? 'border-amber-300 bg-amber-50/80'
-                              : 'border-slate-200 bg-slate-50'
+                          className={`flex shrink-0 flex-col items-center justify-between rounded-2xl px-3.5 py-2 ${
+                            isPrep ? 'bg-[#FFF8E6]' : 'bg-[#F2F4F6]'
                           }`}
                         >
                           <span
-                            className={`rounded-full px-1.5 py-0.5 text-[9px] font-black ${
+                            className={`rounded-full px-2 py-0.5 text-[9px] font-extrabold ${
                               isPrep
-                                ? 'bg-amber-500 text-slate-950'
-                                : 'bg-slate-200 text-slate-600'
+                                ? 'bg-[#F59E0B] text-white'
+                                : 'bg-white text-[#8B95A1]'
                             }`}
                           >
                             {isPrep ? '제조중' : '대기'}
                           </span>
-                          <span className="mt-1 font-mono text-xs font-black text-slate-900">
+                          <span className="mt-1 font-mono text-xs font-black text-[#191F28]">
                             #{aheadOrder.order_number}
                           </span>
-                          <span className="text-[10px] font-bold text-slate-500">
+                          <span className="text-[10px] font-bold text-[#4E5968]">
                             {cupCnt}잔
                           </span>
                         </div>
@@ -829,36 +814,34 @@ export default function GuestOrderPage() {
                         const isPrep = first.status === 'preparing';
                         return (
                           <div
-                            className={`flex shrink-0 flex-col items-center justify-between rounded-2xl border px-3 py-2 ${
-                              isPrep
-                                ? 'border-amber-300 bg-amber-50/80'
-                                : 'border-slate-200 bg-slate-50'
+                            className={`flex shrink-0 flex-col items-center justify-between rounded-2xl px-3.5 py-2 ${
+                              isPrep ? 'bg-[#FFF8E6]' : 'bg-[#F2F4F6]'
                             }`}
                           >
                             <span
-                              className={`rounded-full px-1.5 py-0.5 text-[9px] font-black ${
+                              className={`rounded-full px-2 py-0.5 text-[9px] font-extrabold ${
                                 isPrep
-                                  ? 'bg-amber-500 text-slate-950'
-                                  : 'bg-slate-200 text-slate-600'
+                                  ? 'bg-[#F59E0B] text-white'
+                                  : 'bg-white text-[#8B95A1]'
                               }`}
                             >
                               {isPrep ? '제조중' : '대기'}
                             </span>
-                            <span className="mt-1 font-mono text-xs font-black text-slate-900">
+                            <span className="mt-1 font-mono text-xs font-black text-[#191F28]">
                               #{first.order_number}
                             </span>
-                            <span className="text-[10px] font-bold text-slate-500">
+                            <span className="text-[10px] font-bold text-[#4E5968]">
                               {firstCups}잔
                             </span>
                           </div>
                         );
                       })()}
 
-                      <div className="flex shrink-0 flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-2.5 py-2">
-                        <span className="text-[11px] font-black text-slate-600">
+                      <div className="flex shrink-0 flex-col items-center justify-center rounded-2xl bg-[#F2F4F6] px-3 py-2">
+                        <span className="text-[11px] font-extrabold text-[#4E5968]">
                           +{ordersAhead.length - 2}팀
                         </span>
-                        <span className="text-[9px] font-semibold text-slate-400">
+                        <span className="text-[9px] font-semibold text-[#8B95A1]">
                           대기 중
                         </span>
                       </div>
@@ -870,14 +853,14 @@ export default function GuestOrderPage() {
                           0
                         );
                         return (
-                          <div className="flex shrink-0 flex-col items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2">
-                            <span className="rounded-full bg-slate-200 px-1.5 py-0.5 text-[9px] font-black text-slate-600">
+                          <div className="flex shrink-0 flex-col items-center justify-between rounded-2xl bg-[#F2F4F6] px-3.5 py-2">
+                            <span className="rounded-full bg-white px-2 py-0.5 text-[9px] font-extrabold text-[#8B95A1]">
                               내 앞팀
                             </span>
-                            <span className="mt-1 font-mono text-xs font-black text-slate-900">
+                            <span className="mt-1 font-mono text-xs font-black text-[#191F28]">
                               #{prev.order_number}
                             </span>
-                            <span className="text-[10px] font-bold text-slate-500">
+                            <span className="text-[10px] font-bold text-[#4E5968]">
                               {prevCups}잔
                             </span>
                           </div>
@@ -887,14 +870,14 @@ export default function GuestOrderPage() {
                   )}
 
                   {/* 3. 내 주문 하이라이트 카드 */}
-                  <div className="flex shrink-0 flex-col items-center justify-between rounded-2xl border-2 border-emerald-500 bg-emerald-50 px-3.5 py-2 shadow-2xs">
-                    <span className="rounded-full bg-emerald-600 px-2 py-0.5 text-[9px] font-black text-white">
+                  <div className="flex shrink-0 flex-col items-center justify-between rounded-2xl border-2 border-[#3182F6] bg-[#E8F3FF] px-4 py-2">
+                    <span className="rounded-full bg-[#3182F6] px-2 py-0.5 text-[9px] font-extrabold text-white">
                       내 주문
                     </span>
-                    <span className="mt-1 font-mono text-sm font-black text-emerald-950">
+                    <span className="mt-1 font-mono text-sm font-black text-[#3182F6]">
                       #{completedOrder.order_number}
                     </span>
-                    <span className="text-[10px] font-extrabold text-emerald-700">
+                    <span className="text-[10px] font-extrabold text-[#1B64DA]">
                       {myCupsCount}잔
                     </span>
                   </div>
@@ -903,70 +886,67 @@ export default function GuestOrderPage() {
             </div>
           )}
 
-          {/* 총 결제 금액 + 입금 계좌번호 통합 블록 (하나의 카드로 결합) */}
-          <div className="overflow-hidden rounded-3xl border border-slate-200 bg-slate-900 text-white shadow-xl">
+          {/* 총 결제 금액 + 입금 계좌번호 통합 블록 (Toss 송금 카드 디자인) */}
+          <div className="overflow-hidden rounded-[28px] bg-white p-5 shadow-[0_4px_20px_rgba(0,0,0,0.04)]">
             {/* 상단: 총 결제 금액 및 주문자 정보 */}
-            <div className="p-5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <span className="text-xs font-extrabold text-slate-400">
-                    총 결제 금액
-                  </span>
-                  <p className="mt-0.5 text-xs font-bold text-slate-300">
-                    {completedOrder.customer_name} ({completedOrder.phone})
-                  </p>
-                </div>
-                <span
-                  className={`rounded-xl px-2.5 py-1 text-xs font-black ${
-                    completedOrder.payment_method === 'transfer'
-                      ? 'bg-blue-500/20 text-sky-300 ring-1 ring-sky-400/30'
-                      : 'bg-emerald-500/20 text-emerald-300 ring-1 ring-emerald-400/30'
-                  }`}
-                >
-                  {completedOrder.payment_method === 'transfer'
-                    ? '계좌이체'
-                    : '현금결제'}
+            <div className="flex items-start justify-between">
+              <div>
+                <span className="text-xs font-bold text-[#8B95A1]">
+                  총 결제 금액
                 </span>
+                <p className="mt-1 text-3xl font-black tracking-tight text-[#191F28]">
+                  {formatCurrency(completedOrder.total_amount)}
+                </p>
+                <p className="mt-1 text-xs font-semibold text-[#4E5968]">
+                  {completedOrder.customer_name} · {completedOrder.phone}
+                </p>
               </div>
-
-              <p className="mt-2 text-3xl font-black tracking-tight text-amber-400">
-                {formatCurrency(completedOrder.total_amount)}
-              </p>
+              <span
+                className={`rounded-xl px-3 py-1.5 text-xs font-extrabold ${
+                  completedOrder.payment_method === 'transfer'
+                    ? 'bg-[#E8F3FF] text-[#3182F6]'
+                    : 'bg-[#E8FAF0] text-[#00A859]'
+                }`}
+              >
+                {completedOrder.payment_method === 'transfer'
+                  ? '계좌이체'
+                  : '현금결제'}
+              </span>
             </div>
 
             {/* 하단: 입금 계좌 안내 및 원클릭 복사 (동일 블록 내부에 통합) */}
-            <div className="border-t border-slate-800 bg-slate-800/80 p-4">
+            <div className="mt-4 rounded-2xl bg-[#F2F4F6] p-4">
               <div className="flex items-center justify-between text-xs">
-                <span className="font-extrabold text-sky-300">
+                <span className="font-extrabold text-[#3182F6]">
                   입금 계좌 · {cafeSettings.bank_name}
                 </span>
-                <span className="font-semibold text-slate-300">
+                <span className="font-semibold text-[#4E5968]">
                   예금주: {cafeSettings.account_holder}
                 </span>
               </div>
 
-              <p className="mt-1.5 font-mono text-xl font-black tracking-wider text-white">
+              <p className="mt-1.5 font-mono text-xl font-black tracking-wider text-[#191F28]">
                 {cafeSettings.account_number}
               </p>
 
               <button
                 type="button"
                 onClick={handleCopyAccount}
-                className={`mt-3 flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-extrabold shadow-md transition active:scale-[0.99] ${
+                className={`mt-3.5 flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-extrabold shadow-xs transition active:scale-[0.99] ${
                   copied
-                    ? 'bg-emerald-600 text-white'
-                    : 'bg-blue-600 text-white hover:bg-blue-500'
+                    ? 'bg-[#00C471] text-white'
+                    : 'bg-[#3182F6] text-white hover:bg-[#1B64DA]'
                 }`}
               >
                 {copied ? (
                   <>
                     <Check className="h-4 w-4" />
-                    계좌번호가 복사되었습니다!
+                    계좌번호가 복사되었어요!
                   </>
                 ) : (
                   <>
                     <Copy className="h-4 w-4" />
-                    계좌번호 원클릭 복사하기
+                    계좌번호 복사하기
                   </>
                 )}
               </button>
@@ -974,31 +954,31 @@ export default function GuestOrderPage() {
           </div>
 
           {/* 주문 상세 내역 요약 */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-2xs">
-            <h3 className="mb-2.5 text-xs font-extrabold text-slate-500">
-              주문 메뉴 내역
+          <div className="rounded-[28px] bg-white p-5 shadow-[0_4px_20px_rgba(0,0,0,0.04)]">
+            <h3 className="mb-3 text-xs font-extrabold text-[#8B95A1]">
+              주문한 메뉴
             </h3>
-            <ul className="divide-y divide-slate-100 text-sm">
+            <ul className="divide-y divide-[#F2F4F6] text-sm">
               {completedOrder.items.map((item) => (
                 <li
                   key={item.id}
-                  className="flex items-center justify-between py-2 font-medium text-slate-800"
+                  className="flex items-center justify-between py-2.5 font-semibold text-[#191F28]"
                 >
                   <span>
                     {item.menu_name}{' '}
                     {item.temp_option !== 'NONE' && (
                       <span
-                        className={`ml-1 rounded-md px-1.5 py-0.5 text-[11px] font-bold ${
+                        className={`ml-1 rounded-md px-1.5 py-0.5 text-[11px] font-extrabold ${
                           item.temp_option === 'HOT'
-                            ? 'bg-rose-100 text-rose-700'
-                            : 'bg-sky-100 text-sky-700'
+                            ? 'bg-[#FFEEEE] text-[#F04452]'
+                            : 'bg-[#E8F3FF] text-[#3182F6]'
                         }`}
                       >
                         {item.temp_option}
                       </span>
                     )}
                   </span>
-                  <span className="font-bold">
+                  <span className="font-extrabold text-[#191F28]">
                     {item.quantity}개 · {formatCurrency(item.subtotal)}
                   </span>
                 </li>
@@ -1014,9 +994,9 @@ export default function GuestOrderPage() {
             onClick={() => {
               setIsViewingMenu(true);
             }}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-900 py-4 text-sm font-black text-white shadow-md transition hover:bg-slate-800"
+            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#191F28] py-4 text-sm font-extrabold text-white shadow-sm transition hover:bg-[#333D4B]"
           >
-            <Plus className="h-4 w-4 text-amber-400" />
+            <Plus className="h-4 w-4 text-[#64A8FF]" />
             {isOrderFinished
               ? '메뉴판으로 돌아가기'
               : '추가 주문하기 (메뉴판 보기)'}
@@ -1031,16 +1011,16 @@ export default function GuestOrderPage() {
   );
 
   // ==========================================================================
-  // 기본 메뉴 선택 화면 (모바일 세로형)
+  // 기본 메뉴 선택 화면 (모바일 세로형 - Toss 스타일)
   // ==========================================================================
   return (
-    <div className="mx-auto flex min-h-screen max-w-md flex-col bg-slate-50 pb-28 shadow-lg">
+    <div className="mx-auto flex min-h-screen max-w-md flex-col bg-[#F2F4F6] pb-28 text-[#191F28]">
       {/* 진행 중인 내 주문이 있을 때 언제든 다시 대기 화면으로 돌아갈 수 있는 상단 고정 바 */}
       {myActiveOrders.length > 0 && (
-        <div className="sticky top-0 z-30 bg-slate-900 px-4 py-2.5 text-white shadow-md">
+        <div className="sticky top-0 z-30 bg-[#191F28] px-4 py-3 text-white shadow-md">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 overflow-hidden">
-              <span className="flex h-2.5 w-2.5 shrink-0 animate-ping rounded-full bg-emerald-400" />
+              <span className="flex h-2.5 w-2.5 shrink-0 animate-ping rounded-full bg-[#00C471]" />
               <span className="truncate text-xs font-extrabold">
                 진행 중 내 주문 {myActiveOrders.length}건 (
                 {myActiveOrders.map((o) => `#${o.order_number}`).join(', ')})
@@ -1054,22 +1034,22 @@ export default function GuestOrderPage() {
                 );
                 setIsViewingMenu(false);
               }}
-              className="shrink-0 rounded-xl bg-amber-500 px-3 py-1.5 text-xs font-black text-slate-950 shadow-2xs hover:bg-amber-400"
+              className="shrink-0 rounded-xl bg-[#3182F6] px-3 py-1.5 text-xs font-extrabold text-white shadow-2xs hover:bg-[#1B64DA]"
             >
-              대기 화면 보기 →
+              주문 상태 보기 →
             </button>
           </div>
         </div>
       )}
 
       {/* 상단 헤더 */}
-      <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/95 backdrop-blur-xs">
+      <header className="sticky top-0 z-20 border-b border-[#E5E8EB] bg-white/95 backdrop-blur-xs">
         <div className="flex items-center justify-between px-4 py-3.5">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-600 text-white">
+            <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-[#3182F6] text-white">
               <Coffee className="h-5 w-5" />
             </div>
-            <h1 className="text-base font-black text-slate-900">
+            <h1 className="text-base font-extrabold text-[#191F28]">
               {cafeSettings.cafe_name}
             </h1>
           </div>
@@ -1082,7 +1062,7 @@ export default function GuestOrderPage() {
                 setSelectedReceiptOrder(null);
                 setIsHistoryOpen(true);
               }}
-              className="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-100 px-3 py-1.5 text-xs font-extrabold text-slate-700 hover:bg-slate-200"
+              className="inline-flex items-center gap-1 rounded-2xl bg-[#F2F4F6] px-3 py-1.5 text-xs font-extrabold text-[#4E5968] hover:bg-[#E5E8EB]"
             >
               🧾 내 주문내역 ({myOrders.length})
             </button>
@@ -1094,10 +1074,10 @@ export default function GuestOrderPage() {
           <button
             type="button"
             onClick={() => setSelectedCategory('all')}
-            className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-extrabold transition ${
+            className={`shrink-0 rounded-2xl px-3.5 py-1.5 text-xs font-extrabold transition ${
               selectedCategory === 'all'
-                ? 'bg-slate-900 text-white shadow-xs'
-                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                ? 'bg-[#191F28] text-white'
+                : 'bg-[#F2F4F6] text-[#4E5968] hover:bg-[#E5E8EB]'
             }`}
           >
             전체 메뉴
@@ -1107,10 +1087,10 @@ export default function GuestOrderPage() {
               key={cat.id}
               type="button"
               onClick={() => setSelectedCategory(cat.id)}
-              className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-extrabold transition ${
+              className={`shrink-0 rounded-2xl px-3.5 py-1.5 text-xs font-extrabold transition ${
                 selectedCategory === cat.id
-                  ? 'bg-slate-900 text-white shadow-xs'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  ? 'bg-[#191F28] text-white'
+                  : 'bg-[#F2F4F6] text-[#4E5968] hover:bg-[#E5E8EB]'
               }`}
             >
               {cat.name}
@@ -1121,11 +1101,11 @@ export default function GuestOrderPage() {
 
       {/* QR 주문 일시 중지(예배시간/준비중) 안내 배너 */}
       {isQrOrderPaused && (
-        <div className="mx-4 mt-4 rounded-2xl border-2 border-amber-400 bg-amber-50 p-4 text-center shadow-xs">
-          <p className="text-sm font-black text-amber-950">
-            ⏸️ 잠시 모바일 주문 접수가 중단되었습니다
+        <div className="mx-4 mt-4 rounded-[24px] bg-[#FFF8E6] p-4 text-center">
+          <p className="text-sm font-extrabold text-[#D97706]">
+            ⏸️ 잠시 모바일 주문 접수가 중단되었어요
           </p>
-          <p className="mt-1 text-xs font-semibold leading-relaxed text-amber-800">
+          <p className="mt-1 text-xs font-semibold leading-relaxed text-[#92400E]">
             {cafeSettings.qr_pause_message ||
               '현재 예배 시간(또는 재료 준비 중)으로 잠시 모바일 주문을 멈추었습니다.'}
           </p>
@@ -1144,55 +1124,55 @@ export default function GuestOrderPage() {
             totalWaitingTeams === 0
               ? {
                   label: '바로 제조',
-                  dotClass: 'bg-emerald-500',
-                  badgeClass: 'bg-emerald-600 text-white',
+                  dotClass: 'bg-[#00C471]',
+                  badgeClass: 'bg-[#E8FAF0] text-[#00A859]',
                 }
               : totalWaitingTeams <= 2
                 ? {
                     label: '여유',
-                    dotClass: 'bg-emerald-500',
-                    badgeClass: 'bg-emerald-600 text-white',
+                    dotClass: 'bg-[#00C471]',
+                    badgeClass: 'bg-[#E8FAF0] text-[#00A859]',
                   }
                 : totalWaitingTeams <= 5
                   ? {
                       label: '보통',
-                      dotClass: 'bg-amber-500',
-                      badgeClass: 'bg-amber-500 text-slate-950',
+                      dotClass: 'bg-[#F59E0B]',
+                      badgeClass: 'bg-[#FFF8E6] text-[#D97706]',
                     }
                   : {
                       label: '혼잡',
-                      dotClass: 'bg-rose-500',
-                      badgeClass: 'bg-rose-600 text-white',
+                      dotClass: 'bg-[#F04452]',
+                      badgeClass: 'bg-[#FFEEEE] text-[#F04452]',
                     };
 
           return (
-            <div className="mx-4 mt-3.5 rounded-3xl border border-slate-200 bg-white p-3.5 shadow-2xs">
+            <div className="mx-4 mt-3.5 rounded-[24px] bg-white p-4 shadow-[0_4px_20px_rgba(0,0,0,0.03)]">
               <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2.5">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-slate-900 text-amber-400">
-                    <Coffee className="h-4 w-4" />
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#E8F3FF] text-[#3182F6]">
+                    <Coffee className="h-5 w-5" />
                   </div>
                   <div>
                     <div className="flex items-center gap-1.5">
                       <span
                         className={`h-2 w-2 rounded-full ${congestion.dotClass}`}
                       />
-                      <span className="text-[11px] font-bold text-slate-400">
+                      <span className="text-[11px] font-bold text-[#8B95A1]">
                         실시간 매장 대기 현황
                       </span>
                     </div>
-                    <p className="text-xs font-black text-slate-900">
+                    <p className="mt-0.5 text-xs font-extrabold text-[#191F28]">
                       {totalWaitingTeams === 0 ? (
-                        <span className="text-emerald-600">
+                        <span className="text-[#00A859]">
                           대기 없음 · 주문 즉시 제조 시작!
                         </span>
                       ) : (
                         <>
                           현재 대기{' '}
-                          <span className="text-amber-600">
+                          <span className="text-[#3182F6]">
                             {totalWaitingTeams}팀
                           </span>{' '}
-                          <span className="text-slate-500">
+                          <span className="text-[#8B95A1]">
                             (총 {totalWaitingCups}잔)
                           </span>
                         </>
@@ -1202,7 +1182,7 @@ export default function GuestOrderPage() {
                 </div>
 
                 <span
-                  className={`shrink-0 rounded-xl px-2.5 py-1 text-[11px] font-black ${congestion.badgeClass}`}
+                  className={`shrink-0 rounded-xl px-2.5 py-1 text-[11px] font-extrabold ${congestion.badgeClass}`}
                 >
                   {congestion.label}
                 </span>
@@ -1210,30 +1190,32 @@ export default function GuestOrderPage() {
 
               {/* 대기 중인 주문이 있을 때만 깔끔한 카드 트랙 표시 */}
               {totalWaitingTeams > 0 && (
-                <div className="mt-3 flex items-center gap-1.5 overflow-x-auto rounded-2xl bg-slate-50 p-2">
+                <div className="mt-3 flex items-center gap-1.5 overflow-x-auto rounded-2xl bg-[#F2F4F6] p-2">
                   {activeQueueOrders.slice(0, 3).map((o) => {
                     const cupCnt = o.items.reduce((s, i) => s + i.quantity, 0);
                     const isPrep = o.status === 'preparing';
                     return (
                       <div
                         key={o.id}
-                        className={`flex shrink-0 items-center gap-1.5 rounded-xl border px-2.5 py-1.5 text-[11px] font-black ${
+                        className={`flex shrink-0 items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-[11px] font-extrabold ${
                           isPrep
-                            ? 'border-amber-300 bg-amber-50 text-amber-950'
-                            : 'border-slate-200 bg-white text-slate-700'
+                            ? 'bg-[#FFF8E6] text-[#D97706]'
+                            : 'bg-white text-[#4E5968]'
                         }`}
                       >
                         <span
-                          className={`rounded-md px-1.5 py-0.5 text-[9px] font-black ${
+                          className={`rounded-md px-1.5 py-0.5 text-[9px] font-extrabold ${
                             isPrep
-                              ? 'bg-amber-500 text-slate-950'
-                              : 'bg-slate-200 text-slate-600'
+                              ? 'bg-[#F59E0B] text-white'
+                              : 'bg-[#F2F4F6] text-[#8B95A1]'
                           }`}
                         >
                           {isPrep ? '제조중' : '대기'}
                         </span>
-                        <span className="font-mono">#{o.order_number}</span>
-                        <span className="text-[10px] font-bold text-slate-400">
+                        <span className="font-mono text-[#191F28]">
+                          #{o.order_number}
+                        </span>
+                        <span className="text-[10px] font-bold text-[#8B95A1]">
                           {cupCnt}잔
                         </span>
                       </div>
@@ -1241,12 +1223,12 @@ export default function GuestOrderPage() {
                   })}
 
                   {activeQueueOrders.length > 3 && (
-                    <span className="shrink-0 rounded-xl border border-dashed border-slate-300 bg-white px-2.5 py-1.5 text-[10px] font-black text-slate-600">
+                    <span className="shrink-0 rounded-xl bg-white px-2.5 py-1.5 text-[10px] font-extrabold text-[#4E5968]">
                       +{activeQueueOrders.length - 3}팀
                     </span>
                   )}
 
-                  <div className="ml-auto flex shrink-0 items-center gap-1 rounded-xl bg-emerald-600 px-2.5 py-1.5 text-[10px] font-black text-white">
+                  <div className="ml-auto flex shrink-0 items-center gap-1 rounded-xl bg-[#3182F6] px-2.5 py-1.5 text-[10px] font-extrabold text-white">
                     지금 주문 시 {totalWaitingTeams + 1}번째
                   </div>
                 </div>
@@ -1265,51 +1247,53 @@ export default function GuestOrderPage() {
               type="button"
               disabled={isSoldOut}
               onClick={() => handleMenuClick(menu)}
-              className={`relative flex w-full items-center justify-between rounded-2xl border p-4 text-left transition ${
+              className={`relative flex w-full items-center justify-between rounded-[22px] p-4 text-left transition ${
                 isSoldOut
-                  ? 'cursor-not-allowed border-slate-200 bg-slate-100/80 opacity-65'
-                  : 'border-slate-200/90 bg-white shadow-2xs active:scale-[0.99] hover:border-amber-500'
+                  ? 'cursor-not-allowed bg-white/60 opacity-60'
+                  : 'bg-white shadow-[0_2px_12px_rgba(0,0,0,0.03)] active:scale-[0.99] hover:ring-2 hover:ring-[#3182F6]/30'
               }`}
             >
               <div className="min-w-0 flex-1 pr-3">
                 <div className="flex flex-wrap items-center gap-1.5">
                   <span
                     className={`text-base font-extrabold ${
-                      isSoldOut ? 'text-slate-400 line-through' : 'text-slate-900'
+                      isSoldOut
+                        ? 'text-[#8B95A1] line-through'
+                        : 'text-[#191F28]'
                     }`}
                   >
                     {menu.name}
                   </span>
                   {menu.is_new && !isSoldOut && (
-                    <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-black text-amber-800">
+                    <span className="inline-flex items-center gap-0.5 rounded-full bg-[#E8F3FF] px-2 py-0.5 text-[10px] font-extrabold text-[#3182F6]">
                       <Sparkles className="h-2.5 w-2.5" /> NEW
                     </span>
                   )}
                   {isSoldOut && (
-                    <span className="rounded-md bg-rose-600 px-2 py-0.5 text-[11px] font-black text-white">
-                      품절 (SOLD OUT)
+                    <span className="rounded-lg bg-[#FFEEEE] px-2 py-0.5 text-[11px] font-extrabold text-[#F04452]">
+                      품절
                     </span>
                   )}
                 </div>
 
                 <div className="mt-1 flex items-center gap-1.5 text-xs">
                   {menu.has_temp_option ? (
-                    <span className="inline-flex items-center gap-1 font-semibold text-slate-500">
-                      <span className="text-rose-600">HOT</span> /{' '}
-                      <span className="text-sky-600">ICE</span> 선택 가능
+                    <span className="inline-flex items-center gap-1 font-semibold text-[#8B95A1]">
+                      <span className="text-[#F04452]">HOT</span> /{' '}
+                      <span className="text-[#3182F6]">ICE</span> 선택 가능
                     </span>
                   ) : menu.default_temp !== 'NONE' ? (
                     <span
                       className={`font-bold ${
                         menu.default_temp === 'HOT'
-                          ? 'text-rose-600'
-                          : 'text-sky-600'
+                          ? 'text-[#F04452]'
+                          : 'text-[#3182F6]'
                       }`}
                     >
                       {menu.default_temp} 전용
                     </span>
                   ) : (
-                    <span className="text-slate-400">디저트/단품</span>
+                    <span className="text-[#8B95A1]">디저트/단품</span>
                   )}
                 </div>
               </div>
@@ -1317,13 +1301,13 @@ export default function GuestOrderPage() {
               <div className="text-right">
                 <span
                   className={`text-base font-black ${
-                    isSoldOut ? 'text-slate-400' : 'text-slate-900'
+                    isSoldOut ? 'text-[#8B95A1]' : 'text-[#191F28]'
                   }`}
                 >
                   {formatCurrency(menu.price)}
                 </span>
                 {!isSoldOut && (
-                  <div className="mt-1 text-[11px] font-bold text-amber-600">
+                  <div className="mt-1 text-[11px] font-extrabold text-[#3182F6]">
                     + 담기
                   </div>
                 )}
@@ -1335,21 +1319,21 @@ export default function GuestOrderPage() {
 
       {/* 메뉴 옵션 선택 모달 (Hot/Ice & 수량) */}
       {optionModalMenu && (
-        <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/60 backdrop-blur-xs sm:items-center">
-          <div className="w-full max-w-md rounded-t-3xl bg-white p-6 shadow-2xl sm:rounded-3xl">
+        <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/50 backdrop-blur-xs sm:items-center">
+          <div className="w-full max-w-md rounded-t-[28px] bg-white p-6 shadow-2xl sm:rounded-[28px]">
             <div className="flex items-start justify-between">
               <div>
-                <h3 className="text-xl font-black text-slate-900">
+                <h3 className="text-xl font-extrabold text-[#191F28]">
                   {optionModalMenu.name}
                 </h3>
-                <p className="mt-0.5 text-sm font-bold text-amber-600">
+                <p className="mt-0.5 text-sm font-extrabold text-[#3182F6]">
                   {formatCurrency(optionModalMenu.price)}
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setOptionModalMenu(null)}
-                className="rounded-full bg-slate-100 p-2 text-slate-500"
+                className="rounded-full bg-[#F2F4F6] p-2 text-[#4E5968]"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -1358,17 +1342,17 @@ export default function GuestOrderPage() {
             {/* Hot / Ice 선택 */}
             {optionModalMenu.has_temp_option ? (
               <div className="mt-5">
-                <label className="block text-xs font-extrabold text-slate-600">
-                  온도 선택 (필수)
+                <label className="block text-xs font-extrabold text-[#4E5968]">
+                  온도 선택
                 </label>
                 <div className="mt-2 grid grid-cols-2 gap-3">
                   <button
                     type="button"
                     onClick={() => setSelectedTemp('ICE')}
-                    className={`flex items-center justify-center gap-2 rounded-2xl border-2 py-4 text-base font-black transition ${
+                    className={`flex items-center justify-center gap-2 rounded-2xl border-2 py-4 text-base font-extrabold transition ${
                       selectedTemp === 'ICE'
-                        ? 'border-sky-500 bg-sky-50 text-sky-700 shadow-xs'
-                        : 'border-slate-200 bg-white text-slate-500'
+                        ? 'border-[#3182F6] bg-[#E8F3FF] text-[#3182F6]'
+                        : 'border-transparent bg-[#F2F4F6] text-[#8B95A1]'
                     }`}
                   >
                     <Snowflake className="h-5 w-5" />
@@ -1377,10 +1361,10 @@ export default function GuestOrderPage() {
                   <button
                     type="button"
                     onClick={() => setSelectedTemp('HOT')}
-                    className={`flex items-center justify-center gap-2 rounded-2xl border-2 py-4 text-base font-black transition ${
+                    className={`flex items-center justify-center gap-2 rounded-2xl border-2 py-4 text-base font-extrabold transition ${
                       selectedTemp === 'HOT'
-                        ? 'border-rose-500 bg-rose-50 text-rose-700 shadow-xs'
-                        : 'border-slate-200 bg-white text-slate-500'
+                        ? 'border-[#F04452] bg-[#FFEEEE] text-[#F04452]'
+                        : 'border-transparent bg-[#F2F4F6] text-[#8B95A1]'
                     }`}
                   >
                     <Flame className="h-5 w-5" />
@@ -1389,7 +1373,7 @@ export default function GuestOrderPage() {
                 </div>
               </div>
             ) : (
-              <div className="mt-4 rounded-xl bg-slate-100 px-3.5 py-2.5 text-xs font-bold text-slate-600">
+              <div className="mt-4 rounded-2xl bg-[#F2F4F6] px-3.5 py-2.5 text-xs font-bold text-[#4E5968]">
                 {optionModalMenu.default_temp === 'NONE'
                   ? '온도 옵션이 없는 메뉴입니다.'
                   : `이 메뉴는 ${optionModalMenu.default_temp} 전용 메뉴입니다.`}
@@ -1397,23 +1381,25 @@ export default function GuestOrderPage() {
             )}
 
             {/* 수량 선택 */}
-            <div className="mt-5 flex items-center justify-between rounded-2xl bg-slate-50 p-4">
-              <span className="text-sm font-extrabold text-slate-700">수량 선택</span>
+            <div className="mt-5 flex items-center justify-between rounded-2xl bg-[#F2F4F6] p-4">
+              <span className="text-sm font-extrabold text-[#191F28]">
+                수량 선택
+              </span>
               <div className="flex items-center gap-4">
                 <button
                   type="button"
                   onClick={() => setSelectedQty((q) => Math.max(1, q - 1))}
-                  className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-700 active:scale-95"
+                  className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-[#191F28] shadow-2xs active:scale-95"
                 >
                   <Minus className="h-4 w-4" />
                 </button>
-                <span className="w-6 text-center text-lg font-black text-slate-900">
+                <span className="w-6 text-center text-lg font-black text-[#191F28]">
                   {selectedQty}
                 </span>
                 <button
                   type="button"
                   onClick={() => setSelectedQty((q) => q + 1)}
-                  className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-700 active:scale-95"
+                  className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-[#191F28] shadow-2xs active:scale-95"
                 >
                   <Plus className="h-4 w-4" />
                 </button>
@@ -1423,46 +1409,48 @@ export default function GuestOrderPage() {
             <button
               type="button"
               onClick={handleAddToCart}
-              className="mt-6 w-full rounded-2xl bg-slate-900 py-4 text-base font-extrabold text-white shadow-lg active:scale-[0.99]"
+              className="mt-6 w-full rounded-2xl bg-[#3182F6] py-4 text-base font-extrabold text-white shadow-md transition hover:bg-[#1B64DA] active:scale-[0.99]"
             >
-              {formatCurrency(optionModalMenu.price * selectedQty)} 장바구니 담기
+              {formatCurrency(optionModalMenu.price * selectedQty)} 담기
             </button>
           </div>
         </div>
       )}
 
-      {/* 하단 고정 장바구니 바 */}
+      {/* 하단 고정 장바구니 바 (Toss Primary CTA Bar) */}
       {totalCount > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 z-30 mx-auto max-w-md border-t border-slate-200 bg-white p-4 shadow-2xl">
+        <div className="fixed bottom-0 left-0 right-0 z-30 mx-auto max-w-md border-t border-[#E5E8EB] bg-white/95 p-4 backdrop-blur-xs">
           <button
             type="button"
             onClick={() => setIsCheckoutOpen(true)}
-            className="flex w-full items-center justify-between rounded-2xl bg-amber-600 px-5 py-4 text-white shadow-lg transition hover:bg-amber-700 active:scale-[0.99]"
+            className="flex w-full items-center justify-between rounded-2xl bg-[#3182F6] px-5 py-4 text-white shadow-lg transition hover:bg-[#1B64DA] active:scale-[0.99]"
           >
             <div className="flex items-center gap-2.5">
-              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-xs font-black text-amber-700">
+              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-xs font-black text-[#3182F6]">
                 {totalCount}
               </div>
-              <span className="text-base font-extrabold">주문하기 (장바구니 확인)</span>
+              <span className="text-base font-extrabold">주문하기</span>
             </div>
-            <span className="text-lg font-black">{formatCurrency(totalAmount)}</span>
+            <span className="text-lg font-black">
+              {formatCurrency(totalAmount)}
+            </span>
           </button>
         </div>
       )}
 
       {/* 주문자 정보 입력 및 최종 주문 바텀시트 */}
       {isCheckoutOpen && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-xs sm:items-center">
-          <div className="flex max-h-[92vh] w-full max-w-md flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl sm:rounded-3xl">
-            <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
-              <h2 className="flex items-center gap-2 text-lg font-black text-slate-900">
-                <ShoppingBag className="h-5 w-5 text-amber-600" />
-                주문 확인 및 연락처 입력
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-xs sm:items-center">
+          <div className="flex max-h-[92vh] w-full max-w-md flex-col overflow-hidden rounded-t-[28px] bg-white shadow-2xl sm:rounded-[28px]">
+            <div className="flex items-center justify-between border-b border-[#F2F4F6] px-6 py-4">
+              <h2 className="flex items-center gap-2 text-lg font-extrabold text-[#191F28]">
+                <ShoppingBag className="h-5 w-5 text-[#3182F6]" />
+                주문 확인
               </h2>
               <button
                 type="button"
                 onClick={() => setIsCheckoutOpen(false)}
-                className="rounded-full bg-slate-100 p-1.5 text-slate-500"
+                className="rounded-full bg-[#F2F4F6] p-1.5 text-[#4E5968]"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -1474,31 +1462,31 @@ export default function GuestOrderPage() {
             >
               {/* 담긴 메뉴 리스트 */}
               <div className="space-y-2">
-                <label className="block text-xs font-extrabold text-slate-500">
+                <label className="block text-xs font-extrabold text-[#8B95A1]">
                   선택한 메뉴 ({totalCount}개)
                 </label>
-                <div className="divide-y divide-slate-100 rounded-2xl border border-slate-200 bg-slate-50 px-4">
+                <div className="divide-y divide-white rounded-2xl bg-[#F2F4F6] px-4">
                   {cart.map((item) => (
                     <div
                       key={item.cartKey}
                       className="flex items-center justify-between py-3"
                     >
                       <div>
-                        <span className="text-sm font-extrabold text-slate-900">
+                        <span className="text-sm font-extrabold text-[#191F28]">
                           {item.menu.name}
                         </span>
                         {item.temp_option !== 'NONE' && (
                           <span
                             className={`ml-1.5 rounded-md px-1.5 py-0.5 text-[10px] font-extrabold ${
                               item.temp_option === 'HOT'
-                                ? 'bg-rose-100 text-rose-700'
-                                : 'bg-sky-100 text-sky-700'
+                                ? 'bg-[#FFEEEE] text-[#F04452]'
+                                : 'bg-[#E8F3FF] text-[#3182F6]'
                             }`}
                           >
                             {item.temp_option}
                           </span>
                         )}
-                        <p className="text-xs font-semibold text-slate-500">
+                        <p className="text-xs font-semibold text-[#4E5968]">
                           {formatCurrency(item.menu.price * item.quantity)}
                         </p>
                       </div>
@@ -1507,24 +1495,26 @@ export default function GuestOrderPage() {
                         <button
                           type="button"
                           onClick={() => updateCartQty(item.cartKey, -1)}
-                          className="rounded-lg border border-slate-300 bg-white p-1.5 text-slate-700"
+                          className="rounded-lg bg-white p-1.5 text-[#4E5968] shadow-2xs"
                         >
                           <Minus className="h-3.5 w-3.5" />
                         </button>
-                        <span className="w-5 text-center text-sm font-black">
+                        <span className="w-5 text-center text-sm font-black text-[#191F28]">
                           {item.quantity}
                         </span>
                         <button
                           type="button"
                           onClick={() => updateCartQty(item.cartKey, 1)}
-                          className="rounded-lg border border-slate-300 bg-white p-1.5 text-slate-700"
+                          className="rounded-lg bg-white p-1.5 text-[#4E5968] shadow-2xs"
                         >
                           <Plus className="h-3.5 w-3.5" />
                         </button>
                         <button
                           type="button"
-                          onClick={() => updateCartQty(item.cartKey, -item.quantity)}
-                          className="ml-1 text-rose-500"
+                          onClick={() =>
+                            updateCartQty(item.cartKey, -item.quantity)
+                          }
+                          className="ml-1 text-[#F04452]"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
@@ -1537,7 +1527,7 @@ export default function GuestOrderPage() {
               {/* 주문자 이름 & 휴대폰 번호 전체 입력 */}
               <div className="space-y-3">
                 <div>
-                  <label className="block text-xs font-extrabold text-slate-700">
+                  <label className="block text-xs font-extrabold text-[#4E5968]">
                     주문자 이름 *
                   </label>
                   <input
@@ -1546,13 +1536,13 @@ export default function GuestOrderPage() {
                     placeholder="예: 홍길동"
                     value={customerName}
                     onChange={(e) => setCustomerName(e.target.value)}
-                    className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-base font-bold text-slate-900 focus:border-amber-600 focus:outline-none"
+                    className="mt-1.5 w-full rounded-2xl border border-[#E5E8EB] bg-[#F9FAFB] px-4 py-3.5 text-base font-bold text-[#191F28] focus:border-[#3182F6] focus:bg-white focus:outline-none"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-extrabold text-slate-700">
-                    휴대폰 번호 전체 * (제조 완료 알림 및 픽업 확인용)
+                  <label className="block text-xs font-extrabold text-[#4E5968]">
+                    휴대폰 번호 *
                   </label>
                   <input
                     type="tel"
@@ -1562,25 +1552,25 @@ export default function GuestOrderPage() {
                     placeholder="010-1234-5678"
                     value={phone}
                     onChange={(e) => setPhone(formatPhoneNumber(e.target.value))}
-                    className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-lg font-black tracking-wider text-slate-900 focus:border-amber-600 focus:outline-none"
+                    className="mt-1.5 w-full rounded-2xl border border-[#E5E8EB] bg-[#F9FAFB] px-4 py-3.5 text-lg font-black tracking-wider text-[#191F28] focus:border-[#3182F6] focus:bg-white focus:outline-none"
                   />
                 </div>
               </div>
 
-              {/* 결제 예정 수단 선택 (숨김 설정된 수단은 자동 제외) */}
+              {/* 결제 예정 수단 선택 */}
               <div>
-                <label className="block text-xs font-extrabold text-slate-700">
-                  결제 예정 수단 선택 *
+                <label className="block text-xs font-extrabold text-[#4E5968]">
+                  결제 수단 *
                 </label>
-                <div className="mt-1.5 flex gap-3">
+                <div className="mt-1.5 flex gap-2.5">
                   {cafeSettings.allow_transfer !== false && (
                     <button
                       type="button"
                       onClick={() => setPaymentMethod('transfer')}
-                      className={`flex-1 rounded-2xl border-2 py-3.5 text-sm font-black transition ${
+                      className={`flex-1 rounded-2xl border-2 py-3.5 text-sm font-extrabold transition ${
                         paymentMethod === 'transfer'
-                          ? 'border-blue-600 bg-blue-50 text-blue-700'
-                          : 'border-slate-200 bg-white text-slate-600'
+                          ? 'border-[#3182F6] bg-[#E8F3FF] text-[#3182F6]'
+                          : 'border-transparent bg-[#F2F4F6] text-[#8B95A1]'
                       }`}
                     >
                       계좌이체
@@ -1590,10 +1580,10 @@ export default function GuestOrderPage() {
                     <button
                       type="button"
                       onClick={() => setPaymentMethod('cash')}
-                      className={`flex-1 rounded-2xl border-2 py-3.5 text-sm font-black transition ${
+                      className={`flex-1 rounded-2xl border-2 py-3.5 text-sm font-extrabold transition ${
                         paymentMethod === 'cash'
-                          ? 'border-emerald-600 bg-emerald-50 text-emerald-700'
-                          : 'border-slate-200 bg-white text-slate-600'
+                          ? 'border-[#00C471] bg-[#E8FAF0] text-[#00A859]'
+                          : 'border-transparent bg-[#F2F4F6] text-[#8B95A1]'
                       }`}
                     >
                       현금결제 (카운터)
@@ -1603,10 +1593,12 @@ export default function GuestOrderPage() {
               </div>
 
               {/* 총 결제 금액 & 주문 완료 버튼 */}
-              <div className="border-t border-slate-200 pt-4">
+              <div className="border-t border-[#F2F4F6] pt-4">
                 <div className="mb-3 flex items-center justify-between">
-                  <span className="text-sm font-bold text-slate-600">총 결제 금액</span>
-                  <span className="text-2xl font-black text-amber-600">
+                  <span className="text-sm font-bold text-[#4E5968]">
+                    총 결제 금액
+                  </span>
+                  <span className="text-2xl font-black text-[#3182F6]">
                     {formatCurrency(totalAmount)}
                   </span>
                 </div>
@@ -1614,7 +1606,7 @@ export default function GuestOrderPage() {
                 <button
                   type="submit"
                   disabled={submitting || cart.length === 0}
-                  className="w-full rounded-2xl bg-slate-900 py-4 text-base font-black text-white shadow-xl transition hover:bg-slate-800 disabled:bg-slate-400"
+                  className="w-full rounded-2xl bg-[#3182F6] py-4 text-base font-extrabold text-white shadow-md transition hover:bg-[#1B64DA] disabled:bg-[#E5E8EB]"
                 >
                   {submitting ? '주문 전송 중...' : '주문 접수하기'}
                 </button>
@@ -1626,20 +1618,20 @@ export default function GuestOrderPage() {
 
       {/* 내 주문 내역 (과거 주문 리스트 & 영수증 보기 모달 - 5초 자동 닫힘 없음) */}
       {isHistoryOpen && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-xs sm:items-center">
-          <div className="flex max-h-[88vh] w-full max-w-md flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl sm:rounded-3xl">
-            <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-xs sm:items-center">
+          <div className="flex max-h-[88vh] w-full max-w-md flex-col overflow-hidden rounded-t-[28px] bg-white shadow-2xl sm:rounded-[28px]">
+            <div className="flex items-center justify-between border-b border-[#F2F4F6] px-5 py-4">
               <div className="flex items-center gap-2">
                 {selectedReceiptOrder && (
                   <button
                     type="button"
                     onClick={() => setSelectedReceiptOrder(null)}
-                    className="rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-black text-slate-700 hover:bg-slate-200"
+                    className="rounded-xl bg-[#F2F4F6] px-2.5 py-1 text-xs font-extrabold text-[#4E5968] hover:bg-[#E5E8EB]"
                   >
                     ← 목록
                   </button>
                 )}
-                <h2 className="text-base font-black text-slate-900">
+                <h2 className="text-base font-extrabold text-[#191F28]">
                   {selectedReceiptOrder
                     ? `주문 #${selectedReceiptOrder.order_number} 영수증`
                     : `내 주문 내역 (${myOrders.length}건)`}
@@ -1651,7 +1643,7 @@ export default function GuestOrderPage() {
                   setIsHistoryOpen(false);
                   setSelectedReceiptOrder(null);
                 }}
-                className="rounded-full bg-slate-100 p-1.5 text-slate-500 hover:bg-slate-200"
+                className="rounded-full bg-[#F2F4F6] p-1.5 text-[#4E5968] hover:bg-[#E5E8EB]"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -1660,15 +1652,15 @@ export default function GuestOrderPage() {
             <div className="flex-1 overflow-y-auto p-5">
               {selectedReceiptOrder ? (
                 /* 상세 영수증 화면 */
-                <div className="rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50/70 p-5">
-                  <div className="border-b border-dashed border-slate-300 pb-3.5 text-center">
-                    <p className="text-xs font-extrabold text-slate-500">
+                <div className="rounded-3xl bg-[#F2F4F6] p-5">
+                  <div className="border-b border-dashed border-[#D1D6DB] pb-3.5 text-center">
+                    <p className="text-xs font-bold text-[#8B95A1]">
                       {cafeSettings.cafe_name}
                     </p>
-                    <p className="mt-1 font-mono text-2xl font-black text-slate-900">
+                    <p className="mt-1 font-mono text-2xl font-black text-[#191F28]">
                       주문번호 #{selectedReceiptOrder.order_number}
                     </p>
-                    <p className="mt-1 text-[11px] font-semibold text-slate-400">
+                    <p className="mt-1 text-[11px] font-semibold text-[#8B95A1]">
                       {new Date(selectedReceiptOrder.created_at).toLocaleString(
                         'ko-KR',
                         {
@@ -1682,19 +1674,19 @@ export default function GuestOrderPage() {
                   </div>
 
                   {/* 주문자 요약 */}
-                  <div className="space-y-1 border-b border-dashed border-slate-300 py-3 text-xs">
+                  <div className="space-y-1.5 border-b border-dashed border-[#D1D6DB] py-3 text-xs">
                     <div className="flex justify-between">
-                      <span className="font-semibold text-slate-500">주문자</span>
-                      <span className="font-extrabold text-slate-800">
+                      <span className="font-semibold text-[#8B95A1]">주문자</span>
+                      <span className="font-extrabold text-[#191F28]">
                         {selectedReceiptOrder.customer_name} (
                         {selectedReceiptOrder.phone})
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="font-semibold text-slate-500">
+                      <span className="font-semibold text-[#8B95A1]">
                         결제방식
                       </span>
-                      <span className="font-extrabold text-slate-800">
+                      <span className="font-extrabold text-[#191F28]">
                         {selectedReceiptOrder.payment_method === 'transfer'
                           ? '계좌이체'
                           : '현금결제'}
@@ -1703,26 +1695,26 @@ export default function GuestOrderPage() {
                   </div>
 
                   {/* 품목 내역 */}
-                  <div className="divide-y divide-slate-200/70 py-2">
+                  <div className="divide-y divide-[#E5E8EB] py-2">
                     {selectedReceiptOrder.items.map((item) => (
                       <div
                         key={item.id}
                         className="flex items-center justify-between py-2.5 text-sm"
                       >
                         <div>
-                          <span className="font-extrabold text-slate-900">
+                          <span className="font-extrabold text-[#191F28]">
                             {item.menu_name}
                           </span>
                           {item.temp_option !== 'NONE' && (
-                            <span className="ml-1.5 rounded-md bg-slate-200 px-1.5 py-0.5 text-[10px] font-bold text-slate-700">
+                            <span className="ml-1.5 rounded-md bg-white px-1.5 py-0.5 text-[10px] font-bold text-[#4E5968]">
                               {item.temp_option}
                             </span>
                           )}
-                          <span className="ml-1.5 text-xs font-bold text-slate-500">
+                          <span className="ml-1.5 text-xs font-bold text-[#8B95A1]">
                             × {item.quantity}
                           </span>
                         </div>
-                        <span className="font-mono font-extrabold text-slate-900">
+                        <span className="font-mono font-extrabold text-[#191F28]">
                           {formatCurrency(item.subtotal)}
                         </span>
                       </div>
@@ -1730,8 +1722,8 @@ export default function GuestOrderPage() {
                   </div>
 
                   {/* 합계 */}
-                  <div className="mt-2 flex items-center justify-between border-t-2 border-slate-900 pt-3.5">
-                    <span className="text-sm font-black text-slate-900">
+                  <div className="mt-2 flex items-center justify-between border-t-2 border-[#191F28] pt-3.5">
+                    <span className="text-sm font-extrabold text-[#191F28]">
                       총 합계 (
                       {selectedReceiptOrder.items.reduce(
                         (s, i) => s + i.quantity,
@@ -1739,7 +1731,7 @@ export default function GuestOrderPage() {
                       )}
                       개)
                     </span>
-                    <span className="text-xl font-black text-amber-600">
+                    <span className="text-xl font-black text-[#3182F6]">
                       {formatCurrency(selectedReceiptOrder.total_amount)}
                     </span>
                   </div>
@@ -1772,26 +1764,26 @@ export default function GuestOrderPage() {
                         ord.status === 'ready'
                           ? {
                               label: '제조완료 · 픽업대기 🎉',
-                              cls: 'bg-emerald-600 text-white',
+                              cls: 'bg-[#00C471] text-white',
                             }
                           : ord.status === 'preparing'
                             ? {
                                 label: '제조 중 ☕',
-                                cls: 'bg-amber-500 text-slate-950',
+                                cls: 'bg-[#FFF8E6] text-[#D97706]',
                               }
                             : ord.status === 'pending'
                               ? {
                                   label: '주문 접수',
-                                  cls: 'bg-slate-800 text-white',
+                                  cls: 'bg-[#E8F3FF] text-[#3182F6]',
                                 }
                               : ord.status === 'completed'
                                 ? {
                                     label: '수령 완료 ✓',
-                                    cls: 'bg-slate-200 text-slate-700',
+                                    cls: 'bg-[#E5E8EB] text-[#4E5968]',
                                   }
                                 : {
                                     label: '취소됨',
-                                    cls: 'bg-rose-100 text-rose-700',
+                                    cls: 'bg-[#FFEEEE] text-[#F04452]',
                                   };
 
                       return (
@@ -1799,14 +1791,14 @@ export default function GuestOrderPage() {
                           key={ord.id}
                           type="button"
                           onClick={() => setSelectedReceiptOrder(ord)}
-                          className="flex w-full items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 p-4 text-left transition hover:border-slate-400 hover:bg-white"
+                          className="flex w-full items-center justify-between rounded-2xl bg-[#F2F4F6] p-4 text-left transition hover:bg-[#E5E8EB]/70"
                         >
                           <div className="min-w-0 flex-1">
                             <div className="flex flex-wrap items-center gap-1.5">
-                              <span className="rounded-lg bg-slate-900 px-2.5 py-0.5 font-mono text-xs font-black text-amber-400">
+                              <span className="rounded-lg bg-[#191F28] px-2.5 py-0.5 font-mono text-xs font-black text-white">
                                 #{ord.order_number}
                               </span>
-                              <span className="text-xs font-semibold text-slate-400">
+                              <span className="text-xs font-semibold text-[#8B95A1]">
                                 {timeStr}
                               </span>
                               <span
@@ -1815,19 +1807,19 @@ export default function GuestOrderPage() {
                                 {statusBadge.label}
                               </span>
                             </div>
-                            <p className="mt-1.5 truncate text-sm font-black text-slate-900">
+                            <p className="mt-1.5 truncate text-sm font-extrabold text-[#191F28]">
                               {summaryTitle}{' '}
-                              <span className="text-xs font-bold text-slate-500">
+                              <span className="text-xs font-bold text-[#8B95A1]">
                                 (총 {totalCups}개)
                               </span>
                             </p>
                           </div>
 
                           <div className="ml-3 shrink-0 text-right">
-                            <p className="text-base font-black text-slate-900">
+                            <p className="text-base font-black text-[#191F28]">
                               {formatCurrency(ord.total_amount)}
                             </p>
-                            <span className="text-[11px] font-bold text-amber-700">
+                            <span className="text-[11px] font-extrabold text-[#3182F6]">
                               영수증 보기 →
                             </span>
                           </div>
