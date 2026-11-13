@@ -392,20 +392,26 @@ export default function CounterPosPage() {
                 });
                 await loadAllData();
               }}
-              title="클릭하여 손님 모바일 QR 주문 접수를 잠시 멈추거나 다시 엽니다"
-              className={`inline-flex items-center gap-1 whitespace-nowrap rounded-xl px-2.5 py-1.5 text-xs font-extrabold transition ${
+              title="클릭하여 모바일 주문 접수를 시작하거나 일시 마감합니다"
+              className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl px-3 py-1.5 text-xs font-extrabold transition ${
                 cafeSettings.is_qr_order_enabled !== false
-                  ? 'text-[#00A859] hover:bg-white hover:shadow-2xs'
+                  ? 'bg-emerald-50 text-[#00A859] hover:bg-emerald-100 hover:shadow-2xs'
                   : 'animate-pulse bg-[#F04452] text-white shadow-xs'
               }`}
             >
-              <span className="text-[10px]">
-                {cafeSettings.is_qr_order_enabled !== false ? '🟢' : '⏸️'}
+              <span className="flex h-2 w-2 rounded-full">
+                <span
+                  className={`h-2 w-2 rounded-full ${
+                    cafeSettings.is_qr_order_enabled !== false
+                      ? 'bg-[#00C471]'
+                      : 'bg-white'
+                  }`}
+                />
               </span>
               <span>
                 {cafeSettings.is_qr_order_enabled !== false
-                  ? 'QR 열림'
-                  : 'QR 중지'}
+                  ? '모바일 주문 받는중'
+                  : '모바일 주문 마감'}
               </span>
             </button>
           </div>

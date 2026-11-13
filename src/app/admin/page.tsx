@@ -444,14 +444,14 @@ export default function AdminSettlementPage() {
   // ==========================================================================
   if (!unlocked) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-slate-900 p-6 text-white">
-        <div className="w-full max-w-sm rounded-3xl border border-slate-800 bg-slate-950 p-8 shadow-2xl">
+      <div className="flex min-h-screen flex-col items-center justify-center bg-[#F2F4F6] p-6 text-[#191F28]">
+        <div className="w-full max-w-sm rounded-[28px] bg-white p-8 shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
           <div className="text-center">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-500 text-slate-950">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#E8F3FF] text-[#3182F6]">
               <Lock className="h-7 w-7" />
             </div>
-            <h1 className="text-xl font-black">일일 정산 관리자 잠금</h1>
-            <p className="mt-1 text-xs text-slate-400">
+            <h1 className="text-xl font-black text-[#191F28]">일일 정산 관리자 잠금</h1>
+            <p className="mt-1 text-xs font-semibold text-[#8B95A1]">
               {cafeSettings.cafe_name} 4자리 관리자 PIN 번호를 입력해 주세요
             </p>
           </div>
@@ -462,12 +462,12 @@ export default function AdminSettlementPage() {
               return (
                 <div
                   key={idx}
-                  className={`h-4 w-4 rounded-full transition-all ${
+                  className={`h-3.5 w-3.5 rounded-full transition-all ${
                     pinError
-                      ? 'bg-rose-500 scale-110'
+                      ? 'bg-[#F04452] scale-110'
                       : filled
-                        ? 'bg-amber-400 scale-110'
-                        : 'border-2 border-slate-700 bg-slate-900'
+                        ? 'bg-[#3182F6] scale-110'
+                        : 'bg-[#E5E8EB]'
                   }`}
                 />
               );
@@ -475,39 +475,39 @@ export default function AdminSettlementPage() {
           </div>
 
           {pinError && (
-            <p className="mb-4 text-center text-xs font-bold text-rose-400">
+            <p className="mb-4 text-center text-xs font-bold text-[#F04452]">
               PIN 번호가 일치하지 않습니다. 다시 입력해 주세요.
             </p>
           )}
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-3 gap-2.5">
             {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((digit) => (
               <button
                 key={digit}
                 type="button"
                 onClick={() => handleDigitPress(digit)}
-                className="rounded-2xl bg-slate-900 py-4 text-xl font-black text-white transition hover:bg-slate-800 active:scale-95"
+                className="rounded-2xl bg-[#F2F4F6] py-3.5 text-xl font-black text-[#191F28] transition hover:bg-[#E5E8EB] active:scale-95"
               >
                 {digit}
               </button>
             ))}
             <Link
               href="/pos"
-              className="flex items-center justify-center rounded-2xl bg-slate-900/50 py-4 text-xs font-bold text-slate-400 hover:bg-slate-800 hover:text-white"
+              className="flex items-center justify-center rounded-2xl bg-[#F2F4F6] py-3.5 text-xs font-extrabold text-[#4E5968] hover:bg-[#E5E8EB] hover:text-[#191F28]"
             >
               POS로
             </Link>
             <button
               type="button"
               onClick={() => handleDigitPress('0')}
-              className="rounded-2xl bg-slate-900 py-4 text-xl font-black text-white transition hover:bg-slate-800 active:scale-95"
+              className="rounded-2xl bg-[#F2F4F6] py-3.5 text-xl font-black text-[#191F28] transition hover:bg-[#E5E8EB] active:scale-95"
             >
               0
             </button>
             <button
               type="button"
               onClick={handleBackspace}
-              className="flex items-center justify-center rounded-2xl bg-slate-900 py-4 text-slate-300 hover:bg-slate-800 active:scale-95"
+              className="flex items-center justify-center rounded-2xl bg-[#F2F4F6] py-3.5 text-[#4E5968] hover:bg-[#E5E8EB] active:scale-95"
             >
               <Delete className="h-5 w-5" />
             </button>
@@ -518,16 +518,16 @@ export default function AdminSettlementPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 p-6 md:p-10">
-      <div className="mx-auto max-w-6xl space-y-6">
+    <div className="min-h-screen bg-[#F2F4F6] p-4 sm:p-6 md:p-10 text-[#191F28]">
+      <div className="mx-auto max-w-6xl space-y-5">
         {/* 상단 헤더 */}
-        <header className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white px-6 py-4 shadow-2xs">
+        <header className="flex flex-wrap items-center justify-between gap-4 rounded-[26px] bg-white px-6 py-4 shadow-[0_2px_16px_rgba(0,0,0,0.04)]">
           <div>
-            <div className="flex items-center gap-2 text-xs font-bold text-emerald-700">
+            <div className="flex items-center gap-2 text-xs font-bold text-[#00A859]">
               <BarChart3 className="h-4 w-4" />
               <span>{todayFormatted}</span>
             </div>
-            <h1 className="mt-0.5 text-2xl font-black text-slate-900">
+            <h1 className="mt-0.5 text-2xl font-black text-[#191F28]">
               {cafeSettings.cafe_name} 일일 정산 대시보드
             </h1>
           </div>
@@ -536,7 +536,7 @@ export default function AdminSettlementPage() {
             <button
               type="button"
               onClick={loadOrders}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100"
+              className="inline-flex items-center gap-1.5 rounded-2xl bg-[#F2F4F6] px-3.5 py-2 text-xs font-extrabold text-[#4E5968] hover:bg-[#E5E8EB]"
             >
               <RefreshCw
                 className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`}
@@ -546,9 +546,9 @@ export default function AdminSettlementPage() {
 
             <Link
               href="/pos"
-              className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2 text-xs font-extrabold text-white hover:bg-slate-800"
+              className="inline-flex items-center gap-1.5 rounded-2xl bg-[#3182F6] px-4 py-2 text-xs font-extrabold text-white shadow-xs hover:bg-[#1B64DA]"
             >
-              <MonitorSmartphone className="h-4 w-4 text-amber-400" />
+              <MonitorSmartphone className="h-4 w-4" />
               카운터 POS로 이동
             </Link>
 
@@ -558,7 +558,7 @@ export default function AdminSettlementPage() {
                 setUnlocked(false);
                 setPinInput('');
               }}
-              className="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-100 px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-200"
+              className="inline-flex items-center gap-1 rounded-2xl bg-[#F2F4F6] px-3 py-2 text-xs font-bold text-[#4E5968] hover:bg-[#E5E8EB]"
             >
               <Lock className="h-3.5 w-3.5" />
               화면 잠금
@@ -567,29 +567,29 @@ export default function AdminSettlementPage() {
         </header>
 
         {/* ==================================================================
-            정산 결과 내보내기 & 기록 정리 툴바 (카톡 복사 / 내 폰으로 QR / 엑셀 / 공유 / 초기화)
+            정산 결과 내보내기 & 기록 정리 툴바 (정산 텍스트 복사 / 내 폰으로 QR / 엑셀 / 초기화)
         ================================================================== */}
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border-2 border-amber-300/80 bg-amber-50/70 p-4 shadow-2xs">
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-[26px] bg-white p-4 shadow-[0_2px_16px_rgba(0,0,0,0.04)]">
           <div className="flex flex-wrap items-center gap-2">
-            {/* 1. 카톡용 정산 텍스트 복사 */}
+            {/* 1. 정산 텍스트 복사 (기존: 카톡용 정산 텍스트 복사 -> 정산 텍스트 복사) */}
             <button
               type="button"
               onClick={handleCopyKakaoText}
-              className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-black shadow-sm transition active:scale-95 ${
+              className={`inline-flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-extrabold shadow-xs transition active:scale-95 ${
                 copiedKakao
-                  ? 'bg-emerald-600 text-white'
-                  : 'bg-amber-400 text-slate-950 hover:bg-amber-300'
+                  ? 'bg-[#00C471] text-white'
+                  : 'bg-[#3182F6] text-white hover:bg-[#1B64DA]'
               }`}
             >
               {copiedKakao ? (
                 <>
                   <Check className="h-4 w-4" />
-                  카톡 정산 양식 복사 완료!
+                  정산 텍스트 복사 완료!
                 </>
               ) : (
                 <>
                   <Copy className="h-4 w-4" />
-                  카톡용 정산 텍스트 복사
+                  정산 텍스트 복사
                 </>
               )}
             </button>
@@ -598,9 +598,9 @@ export default function AdminSettlementPage() {
             <button
               type="button"
               onClick={() => setQrModalOpen(true)}
-              className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-black text-white shadow-sm transition hover:bg-slate-800 active:scale-95"
+              className="inline-flex items-center gap-2 rounded-2xl bg-[#191F28] px-4 py-2.5 text-xs font-extrabold text-white shadow-xs transition hover:bg-[#333D4B] active:scale-95"
             >
-              <QrCode className="h-4 w-4 text-amber-400" />
+              <QrCode className="h-4 w-4 text-[#64A8FF]" />
               내 폰으로 정산 결과 가져오기 (QR)
             </button>
 
@@ -608,9 +608,9 @@ export default function AdminSettlementPage() {
             <button
               type="button"
               onClick={handleDownloadCsv}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-600 bg-white px-3.5 py-2.5 text-xs font-extrabold text-emerald-800 transition hover:bg-emerald-50 active:scale-95"
+              className="inline-flex items-center gap-1.5 rounded-2xl bg-[#E8FAF0] px-3.5 py-2.5 text-xs font-extrabold text-[#00A859] transition hover:bg-[#D1F5E1] active:scale-95"
             >
-              <Download className="h-4 w-4 text-emerald-600" />
+              <Download className="h-4 w-4" />
               엑셀(CSV) 다운로드
             </button>
           </div>
@@ -623,80 +623,80 @@ export default function AdminSettlementPage() {
               setConfirmPinError(false);
               setClearModalOpen(true);
             }}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-rose-300 bg-white px-3.5 py-2.5 text-xs font-extrabold text-rose-600 transition hover:bg-rose-50"
+            className="inline-flex items-center gap-1.5 rounded-2xl bg-[#FFEEEE] px-3.5 py-2.5 text-xs font-extrabold text-[#F04452] transition hover:bg-[#FFD9DC]"
           >
             <Trash2 className="h-4 w-4" />
-            이전 주문 기록 비우기(초기화)
+            이전 주문 기록 비우기
           </button>
         </div>
 
-        {/* 핵심 KPI 카드 4개 */}
+        {/* 핵심 KPI 카드 4개 (Toss 스타일 부드러운 카드 톤) */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="rounded-3xl bg-slate-900 p-6 text-white shadow-lg">
+          <div className="rounded-[26px] bg-[#3182F6] p-6 text-white shadow-[0_8px_24px_rgba(49,130,246,0.25)]">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-400">
+              <span className="text-xs font-bold text-white/80">
                 오늘 총 매출액 (완료 기준)
               </span>
-              <CheckCircle2 className="h-5 w-5 text-emerald-400" />
+              <CheckCircle2 className="h-5 w-5 text-white" />
             </div>
-            <p className="mt-3 text-3xl font-black text-amber-400">
+            <p className="mt-3 text-3xl font-black text-white">
               {formatCurrency(totalSalesAmount)}
             </p>
-            <p className="mt-2 text-xs text-slate-300">
-              완료 주문 <strong>{completedOrders.length}건</strong> · 총{' '}
-              <strong>{totalSoldCups}잔/개</strong> 판매
+            <p className="mt-2 text-xs font-medium text-white/80">
+              완료 주문 <strong className="text-white">{completedOrders.length}건</strong> · 총{' '}
+              <strong className="text-white">{totalSoldCups}잔/개</strong> 판매
             </p>
           </div>
 
-          <div className="rounded-3xl border border-blue-200 bg-white p-6 shadow-2xs">
+          <div className="rounded-[26px] bg-white p-6 shadow-[0_2px_16px_rgba(0,0,0,0.04)]">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-extrabold text-blue-700">
+              <span className="text-xs font-extrabold text-[#3182F6]">
                 계좌이체 합계
               </span>
-              <CreditCard className="h-5 w-5 text-blue-600" />
+              <CreditCard className="h-5 w-5 text-[#3182F6]" />
             </div>
-            <p className="mt-3 text-2xl font-black text-slate-900">
+            <p className="mt-3 text-2xl font-black text-[#191F28]">
               {formatCurrency(transferSalesAmount)}
             </p>
-            <p className="mt-2 text-xs font-semibold text-slate-500">
+            <p className="mt-2 text-xs font-semibold text-[#8B95A1]">
               완료 {transferOrders.length}건 ({transferRatio}%)
             </p>
           </div>
 
-          <div className="rounded-3xl border border-emerald-200 bg-white p-6 shadow-2xs">
+          <div className="rounded-[26px] bg-white p-6 shadow-[0_2px_16px_rgba(0,0,0,0.04)]">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-extrabold text-emerald-700">
+              <span className="text-xs font-extrabold text-[#00A859]">
                 현금 결제 합계
               </span>
-              <Banknote className="h-5 w-5 text-emerald-600" />
+              <Banknote className="h-5 w-5 text-[#00A859]" />
             </div>
-            <p className="mt-3 text-2xl font-black text-slate-900">
+            <p className="mt-3 text-2xl font-black text-[#191F28]">
               {formatCurrency(cashSalesAmount)}
             </p>
-            <p className="mt-2 text-xs font-semibold text-slate-500">
+            <p className="mt-2 text-xs font-semibold text-[#8B95A1]">
               완료 {cashOrders.length}건 ({cashRatio}%)
             </p>
           </div>
 
-          <div className="rounded-3xl border border-rose-200 bg-white p-6 shadow-2xs">
+          <div className="rounded-[26px] bg-white p-6 shadow-[0_2px_16px_rgba(0,0,0,0.04)]">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-extrabold text-rose-700">
-                주문 취소 / 미완료 현황
+              <span className="text-xs font-extrabold text-[#F04452]">
+                주문 취소 / 대기 현황
               </span>
-              <XCircle className="h-5 w-5 text-rose-500" />
+              <XCircle className="h-5 w-5 text-[#F04452]" />
             </div>
             <div className="mt-3 flex items-baseline gap-2">
-              <span className="text-2xl font-black text-rose-600">
+              <span className="text-2xl font-black text-[#F04452]">
                 취소 {cancelledOrders.length}건
               </span>
-              <span className="text-xs font-bold text-slate-400">
+              <span className="text-xs font-bold text-[#8B95A1]">
                 ({formatCurrency(
                   cancelledOrders.reduce((s, o) => s + o.total_amount, 0)
                 )}{' '}
                 제외됨)
               </span>
             </div>
-            <p className="mt-2 flex items-center gap-1 text-xs font-semibold text-amber-700">
+            <p className="mt-2 flex items-center gap-1 text-xs font-semibold text-[#3182F6]">
               <Clock className="h-3.5 w-3.5" />
               현재 제조/픽업 대기: {activeOrders.length}건
             </p>
@@ -705,60 +705,60 @@ export default function AdminSettlementPage() {
 
         {/* 메뉴별 판매 수량 집계 & 오늘 주문 처리 내역 */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-2xs lg:col-span-7">
+          <div className="rounded-[26px] bg-white p-6 shadow-[0_2px_16px_rgba(0,0,0,0.04)] lg:col-span-7">
             <div className="mb-4 flex items-center justify-between">
               <div>
-                <h2 className="text-base font-black text-slate-900">
+                <h2 className="text-base font-black text-[#191F28]">
                   메뉴별 판매 수량 집계
                 </h2>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs font-semibold text-[#8B95A1]">
                   전달 및 결제 완료된 주문 기준 메뉴별 판매량 순위입니다.
                 </p>
               </div>
-              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-extrabold text-slate-700">
+              <span className="rounded-full bg-[#F2F4F6] px-3 py-1 text-xs font-extrabold text-[#4E5968]">
                 총 {totalSoldCups}잔/개
               </span>
             </div>
 
             {menuSalesList.length === 0 ? (
-              <div className="py-12 text-center text-sm text-slate-400">
+              <div className="py-12 text-center text-sm font-semibold text-[#8B95A1]">
                 아직 오늘 전달 완료된 판매 내역이 없습니다.
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm">
                   <thead>
-                    <tr className="border-b border-slate-200 text-xs font-extrabold text-slate-500">
+                    <tr className="border-b border-[#F2F4F6] text-xs font-extrabold text-[#8B95A1]">
                       <th className="pb-3">순위 / 메뉴명</th>
-                      <th className="pb-3 text-center text-sky-600">ICE</th>
-                      <th className="pb-3 text-center text-rose-600">HOT</th>
+                      <th className="pb-3 text-center text-[#3182F6]">ICE</th>
+                      <th className="pb-3 text-center text-[#F04452]">HOT</th>
                       <th className="pb-3 text-center">기타</th>
                       <th className="pb-3 text-right">총 수량</th>
                       <th className="pb-3 text-right">판매 금액</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100">
+                  <tbody className="divide-y divide-[#F2F4F6]">
                     {menuSalesList.map((stat, idx) => (
-                      <tr key={stat.menuName} className="hover:bg-slate-50">
-                        <td className="py-3 font-extrabold text-slate-900">
-                          <span className="mr-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-slate-900 text-[11px] font-black text-amber-400">
+                      <tr key={stat.menuName} className="hover:bg-[#F9FAFB]">
+                        <td className="py-3 font-extrabold text-[#191F28]">
+                          <span className="mr-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-[#E8F3FF] text-[11px] font-black text-[#3182F6]">
                             {idx + 1}
                           </span>
                           {stat.menuName}
                         </td>
-                        <td className="py-3 text-center font-bold text-sky-700">
+                        <td className="py-3 text-center font-bold text-[#3182F6]">
                           {stat.iceQty > 0 ? `${stat.iceQty}` : '-'}
                         </td>
-                        <td className="py-3 text-center font-bold text-rose-700">
+                        <td className="py-3 text-center font-bold text-[#F04452]">
                           {stat.hotQty > 0 ? `${stat.hotQty}` : '-'}
                         </td>
-                        <td className="py-3 text-center text-slate-500">
+                        <td className="py-3 text-center text-[#8B95A1]">
                           {stat.noneQty > 0 ? `${stat.noneQty}` : '-'}
                         </td>
-                        <td className="py-3 text-right font-black text-slate-900">
+                        <td className="py-3 text-right font-black text-[#191F28]">
                           {stat.totalQty}개
                         </td>
-                        <td className="py-3 text-right font-bold text-slate-700">
+                        <td className="py-3 text-right font-bold text-[#4E5968]">
                           {formatCurrency(stat.totalRevenue)}
                         </td>
                       </tr>
@@ -769,17 +769,17 @@ export default function AdminSettlementPage() {
             )}
           </div>
 
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-2xs lg:col-span-5">
-            <h2 className="mb-1 text-base font-black text-slate-900">
+          <div className="rounded-[26px] bg-white p-6 shadow-[0_2px_16px_rgba(0,0,0,0.04)] lg:col-span-5">
+            <h2 className="mb-1 text-base font-black text-[#191F28]">
               오늘 주문 처리 내역 ({orders.length}건)
             </h2>
-            <p className="mb-4 text-xs text-slate-500">
+            <p className="mb-4 text-xs font-semibold text-[#8B95A1]">
               취소된 주문은 취소선으로 표시되며 매출 집계에서 자동 제외됩니다.
             </p>
 
             <div className="max-h-96 space-y-2.5 overflow-y-auto pr-1">
               {orders.length === 0 ? (
-                <div className="py-12 text-center text-xs text-slate-400">
+                <div className="py-12 text-center text-xs font-semibold text-[#8B95A1]">
                   기록된 주문 내역이 없습니다.
                 </div>
               ) : (
@@ -789,25 +789,25 @@ export default function AdminSettlementPage() {
                   .map((order) => (
                     <div
                       key={order.id}
-                      className={`rounded-2xl border p-3.5 text-xs ${
+                      className={`rounded-2xl border p-3.5 text-xs transition ${
                         order.status === 'cancelled'
-                          ? 'border-rose-200 bg-rose-50/40 opacity-70'
+                          ? 'border-[#FFEEEE] bg-[#FFF8F8] opacity-70'
                           : order.status === 'completed'
-                            ? 'border-slate-200 bg-slate-50'
-                            : 'border-amber-300 bg-amber-50/50'
+                            ? 'border-transparent bg-[#F9FAFB]'
+                            : 'border-[#3182F6]/30 bg-[#F4F8FF]'
                       }`}
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-1.5">
-                          <span className="font-black text-slate-900">
+                          <span className="font-black text-[#191F28]">
                             #{order.order_number} {order.customer_name} (
                             {order.phone})
                           </span>
                           <span
-                            className={`rounded px-1.5 py-0.5 text-[10px] font-extrabold ${
+                            className={`rounded-lg px-2 py-0.5 text-[10px] font-extrabold ${
                               order.payment_method === 'transfer'
-                                ? 'bg-blue-100 text-blue-800'
-                                : 'bg-emerald-100 text-emerald-800'
+                                ? 'bg-[#E8F3FF] text-[#3182F6]'
+                                : 'bg-[#E8FAF0] text-[#00A859]'
                             }`}
                           >
                             {order.payment_method === 'transfer'
@@ -819,16 +819,16 @@ export default function AdminSettlementPage() {
                         <span
                           className={`font-extrabold ${
                             order.status === 'cancelled'
-                              ? 'text-rose-600 line-through'
-                              : 'text-slate-900'
+                              ? 'text-[#F04452] line-through'
+                              : 'text-[#191F28]'
                           }`}
                         >
                           {formatCurrency(order.total_amount)}
                         </span>
                       </div>
 
-                      <div className="mt-1.5 flex items-center justify-between text-[11px] text-slate-500">
-                        <span className="truncate pr-2">
+                      <div className="mt-1.5 flex items-center justify-between text-[11px] text-[#8B95A1]">
+                        <span className="truncate pr-2 font-medium text-[#4E5968]">
                           {order.items
                             .map(
                               (i) =>
@@ -841,13 +841,31 @@ export default function AdminSettlementPage() {
                             .join(', ')}
                         </span>
                         <span
-                          className={`shrink-0 font-bold ${
+                          className={`shrink-0 rounded-lg px-2 py-0.5 font-extrabold ${
                             order.status === 'completed'
-                              ? 'text-emerald-700'
+                              ? 'bg-[#E8FAF0] text-[#00A859]'
                               : order.status === 'cancelled'
-                                ? 'text-rose-600'
-                                : 'text-amber-700'
+                                ? 'bg-[#FFEEEE] text-[#F04452]'
+                                : 'bg-[#E8F3FF] text-[#3182F6]'
                           }`}
+                        >
+                          {order.status === 'completed'
+                            ? '완료'
+                            : order.status === 'cancelled'
+                              ? '취소됨'
+                              : order.status === 'ready'
+                                ? '픽업호출'
+                                : order.status === 'preparing'
+                                  ? '제조중'
+                                  : '접수대기'}
+                        </span>
+                      </div>
+                    </div>
+                  ))
+              )}
+            </div>
+          </div>
+        </div>
                         >
                           {order.status === 'completed'
                             ? '완료'

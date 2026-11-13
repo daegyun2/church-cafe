@@ -1141,15 +1141,21 @@ export default function GuestOrderPage() {
         </div>
       </header>
 
-      {/* QR 주문 일시 중지(예배시간/준비중) 안내 배너 */}
+      {/* QR 주문 마감(예배시간/준비중) 전체 화면 오버레이 배너 (임팩트 있는 안내) */}
       {isQrOrderPaused && (
-        <div className="mx-4 mt-4 rounded-[24px] bg-[#FFF8E6] p-4 text-center">
-          <p className="text-sm font-extrabold text-[#D97706]">
-            ⏸️ 잠시 모바일 주문 접수가 중단되었어요
-          </p>
-          <p className="mt-1 text-xs font-semibold leading-relaxed text-[#92400E]">
+        <div className="mx-4 mt-4 overflow-hidden rounded-[28px] border-2 border-[#F04452] bg-white p-5 text-center shadow-[0_8px_30px_rgba(240,68,82,0.12)]">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#FFEEEE] text-[#F04452]">
+            <BellRing className="h-7 w-7 animate-bounce" />
+          </div>
+          <span className="mt-3 inline-block rounded-full bg-[#FFEEEE] px-3 py-1 text-xs font-black text-[#F04452]">
+            주문 접수 일시 마감
+          </span>
+          <h2 className="mt-2 text-lg font-black text-[#191F28]">
+            지금은 모바일 주문을 받지 않고 있어요
+          </h2>
+          <p className="mt-1.5 text-xs font-bold leading-relaxed text-[#4E5968]">
             {cafeSettings.qr_pause_message ||
-              '현재 예배 시간(또는 재료 준비 중)으로 잠시 모바일 주문을 멈추었습니다.'}
+              '예배 시간 또는 재료 준비 중입니다. 잠시 후 다시 확인해 주시거나 카운터로 문의해 주세요.'}
           </p>
         </div>
       )}
@@ -1287,10 +1293,10 @@ export default function GuestOrderPage() {
             <button
               key={menu.id}
               type="button"
-              disabled={isSoldOut}
+              disabled={isSoldOut || isQrOrderPaused}
               onClick={() => handleMenuClick(menu)}
               className={`relative flex w-full items-center justify-between rounded-[22px] p-4 text-left transition ${
-                isSoldOut
+                isSoldOut || isQrOrderPaused
                   ? 'cursor-not-allowed bg-white/60 opacity-60'
                   : 'bg-white shadow-[0_2px_12px_rgba(0,0,0,0.03)] active:scale-[0.99] hover:ring-2 hover:ring-[#3182F6]/30'
               }`}
